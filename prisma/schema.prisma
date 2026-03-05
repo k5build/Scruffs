@@ -1,0 +1,65 @@
+// Scruffs.ae – Prisma Schema
+// Switch provider to "postgresql" for production (Neon.tech / Vercel Postgres)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  bookingRef String        @unique
+
+  // Pet details
+  petName    String
+  petType    String        // DOG | CAT
+  petBreed   String
+  petAge     String
+  petSize    String?       // SMALL | MEDIUM | LARGE (dogs only)
+  petNotes   String?
+
+  // Service
+  service    String        // BASIC | SPECIAL | FULL
+  price      Float
+  duration   Int           @default(60)  // minutes
+
+  // Location
+  area       String
+  address    String
+  buildingNote String?
+  mapsLink   String?
+
+  // Owner
+  ownerName  String
+  ownerEmail String?
+  ownerPhone String
+
+  // Appointment slot
+  slot       TimeSlot      @relation(fields: [slotId], references: [id])
+  slotId     String        @unique
+
+  // Status
+  status     String        @default("PENDING")  // PENDING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELLED
+
+  // Admin notes
+  adminNotes String?
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model TimeSlot {
+  id          String    @id @default(cuid())
+  date        String    // "2024-03-15" (YYYY-MM-DD) – Dubai date
+  startTime   String    // "09:00"
+  endTime     String    // "11:00"
+  isAvailable Boolean   @default(true)
+  booking     Booking?
+  createdAt   DateTime  @default(now())
+
+  @@unique([date, startTime])
+}

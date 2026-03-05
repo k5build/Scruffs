@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Brand tokens ── */
+:root {
+  --scruffs-dark:    #3A4F4A;
+  --scruffs-darker:  #2B3A36;
+  --scruffs-beige:   #DBD4C7;
+  --scruffs-teal:    #A3C0BE;
+  --scruffs-teal-dark: #7AA8A5;
+  --scruffs-light:   #F4F2EE;
+  --scruffs-white:   #ffffff;
+  --text-dark:       #2B3A36;
+  --text-gray:       #7A8582;
+  --text-light:      #A8AFAD;
+  --border:          #E8E4DE;
+  --shadow-sm:       0 2px 8px rgba(58,79,74,0.06);
+  --shadow-md:       0 4px 16px rgba(58,79,74,0.10);
+  --shadow-lg:       0 8px 32px rgba(58,79,74,0.14);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background-color: var(--scruffs-light);
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--scruffs-light); }
+::-webkit-scrollbar-thumb { background: var(--scruffs-teal); border-radius: 4px; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Typography ── */
+.font-display { font-family: 'Montserrat', sans-serif; }
+h1, h2, h3, .heading { font-family: 'Montserrat', sans-serif; font-weight: 800; }
+
+/* ── Brand button ── */
+.btn-primary {
+  background-color: var(--scruffs-dark);
+  color: var(--scruffs-beige);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+.btn-primary:hover { background-color: var(--scruffs-darker); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background-color: var(--scruffs-beige);
+  color: var(--scruffs-dark);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover { background-color: #cfc8bc; transform: translateY(-1px); }
+
+.btn-teal {
+  background-color: var(--scruffs-teal);
+  color: var(--scruffs-dark);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+.btn-teal:hover { background-color: var(--scruffs-teal-dark); }
+
+/* ── Input fields ── */
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  color: var(--text-dark);
+  background: white;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field::placeholder { color: var(--text-light); }
+.input-field:focus { border-color: var(--scruffs-teal); box-shadow: 0 0 0 3px rgba(163,192,190,0.2); }
+.input-field.error { border-color: #e05a5a; box-shadow: 0 0 0 3px rgba(224,90,90,0.15); }
+
+/* ── Cards ── */
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card-hover:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+/* ── Brand bar ── */
+.brand-bar {
+  background-color: var(--scruffs-dark);
+  color: var(--scruffs-beige);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+/* ── Promo card ── */
+.promo-card {
+  background: var(--scruffs-dark);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.promo-card::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  bottom: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(163,192,190,0.12);
+}
+.promo-card::before {
+  content: '';
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(163,192,190,0.08);
+}
+
+/* ── Service card selected ── */
+.service-selected {
+  border: 2px solid var(--scruffs-teal) !important;
+  background: rgba(163,192,190,0.08) !important;
+}
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  background: white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(58,79,74,0.08);
+}
+
+/* ── Status badges ── */
+.badge { display: inline-flex; align-items: center; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+.badge-pending    { background: #FEF3C7; color: #92400E; }
+.badge-confirmed  { background: #DBEAFE; color: #1E40AF; }
+.badge-in_progress{ background: #EDE9FE; color: #5B21B6; }
+.badge-completed  { background: #D1FAE5; color: #065F46; }
+.badge-cancelled  { background: #FEE2E2; color: #991B1B; }
+
+/* ── Slot pill ── */
+.slot-pill {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.slot-pill:hover { border-color: var(--scruffs-teal); background: rgba(163,192,190,0.06); }
+.slot-pill.selected { border-color: var(--scruffs-dark); background: var(--scruffs-dark); color: var(--scruffs-beige); }
+
+/* ── Date pill ── */
+.date-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: white;
+  min-width: 56px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.date-pill:hover { border-color: var(--scruffs-teal); }
+.date-pill.selected { background: var(--scruffs-dark); border-color: var(--scruffs-dark); color: white; }
+.date-pill.today-label .today-tag { color: var(--scruffs-teal); font-size: 9px; font-weight: 800; }
+.date-pill.selected .today-tag { color: var(--scruffs-teal); }
+
+/* ── Step wizard ── */
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px; font-weight: 800;
+  transition: all 0.2s ease;
+}
+.step-dot.done   { background: var(--scruffs-teal); color: var(--scruffs-dark); }
+.step-dot.active { background: var(--scruffs-dark); color: var(--scruffs-beige); box-shadow: 0 0 0 4px rgba(58,79,74,0.12); }
+.step-dot.pending { background: var(--border); color: var(--text-gray); }
+
+/* ── Page transitions ── */
+.page-enter { animation: pageSlide 0.3s ease-out forwards; }
+@keyframes pageSlide {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Pet type card ── */
+.pet-card {
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.pet-card:hover { border-color: var(--scruffs-teal); box-shadow: var(--shadow-sm); }
+.pet-card.selected { border-color: var(--scruffs-dark); background: rgba(58,79,74,0.04); }
+
+/* ── Google Maps button ── */
+.maps-btn {
+  border: 1.5px solid var(--border);
+  background: white;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.maps-btn:hover { border-color: var(--scruffs-teal); background: rgba(163,192,190,0.05); }
+
+/* ── Confirmation success ── */
+.success-ring {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(163,192,190,0.2);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.success-ring::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(163,192,190,0.35);
+}
+
+/* ── Admin table ── */
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th {
+  text-align: left; padding: 10px 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-gray);
+  background: #F9F8F6; border-bottom: 1px solid var(--border);
+}
+.admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: #FAFAF8; }
