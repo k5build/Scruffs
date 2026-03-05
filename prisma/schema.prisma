@@ -10,22 +10,72 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ── Customer accounts ─────────────────────────────────────────
+model User {
+  id        String    @id @default(cuid())
+  phone     String    @unique          // +971XXXXXXXXX (normalized)
+  name      String?
+  email     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  pets      Pet[]
+  bookings  Booking[]
+  otpCodes  OtpCode[]
+}
+
+// ── OTP codes (phone login) ───────────────────────────────────
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [phone], references: [phone])
+
+  @@index([phone])
+}
+
+// ── Saved pet profiles ────────────────────────────────────────
+model Pet {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  type      String   // DOG | CAT
+  breed     String
+  size      String?  // SMALL | MEDIUM | LARGE (dogs only)
+  age       String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+}
+
+// ── Bookings ──────────────────────────────────────────────────
 model Booking {
-  id         String        @id @default(cuid())
-  bookingRef String        @unique
+  id         String   @id @default(cuid())
+  bookingRef String   @unique
 
   // Pet details
   petName    String
-  petType    String        // DOG | CAT
+  petType    String         // DOG | CAT
   petBreed   String
   petAge     String
-  petSize    String?       // SMALL | MEDIUM | LARGE (dogs only)
+  petSize    String?        // SMALL | MEDIUM | LARGE (dogs only)
   petNotes   String?
 
+  // Linked pet profile (optional, for logged-in users)
+  petId      String?
+  pet        Pet?     @relation(fields: [petId], references: [id])
+
   // Service
-  service    String        // BASIC | SPECIAL | FULL
+  service    String         // BASIC | SPECIAL | FULL
   price      Float
-  duration   Int           @default(60)  // minutes
+  duration   Int      @default(60)  // minutes
 
   // Location
   area       String
@@ -38,20 +88,25 @@ model Booking {
   ownerEmail String?
   ownerPhone String
 
+  // Linked user account (optional, null for guest bookings)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+
   // Appointment slot
-  slot       TimeSlot      @relation(fields: [slotId], references: [id])
-  slotId     String        @unique
+  slot       TimeSlot @relation(fields: [slotId], references: [id])
+  slotId     String   @unique
 
   // Status
-  status     String        @default("PENDING")  // PENDING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELLED
+  status     String   @default("CONFIRMED") // PENDING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELLED
 
   // Admin notes
   adminNotes String?
 
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
+// ── Appointment slots ─────────────────────────────────────────
 model TimeSlot {
   id          String    @id @default(cuid())
   date        String    // "2024-03-15" (YYYY-MM-DD) – Dubai date

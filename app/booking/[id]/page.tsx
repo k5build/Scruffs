@@ -5,6 +5,9 @@ import Image from 'next/image';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, SERVICES } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'Booking Confirmed – Scruffs.ae',
@@ -41,101 +44,83 @@ export default async function BookingConfirmationPage({ params }: Props) {
   });
 
   return (
-    <div className="min-h-screen bg-scruffs-light flex flex-col">
-      {/* Top bar */}
-      <div className="bg-scruffs-dark px-4 py-3 flex items-center justify-between">
-        <Image src="/logo-icon-beige.png" alt="Scruffs" width={32} height={32} className="rounded-full opacity-80" />
-        <p className="text-scruffs-beige/70 text-xs font-display font-bold uppercase tracking-widest">Booking Confirmed</p>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="bg-primary px-4 py-3.5 flex items-center justify-between">
+        <Image src="/logo-icon-beige.png" alt="Scruffs" width={30} height={30} className="rounded-full opacity-80" />
+        <Badge variant="teal" className="text-[10px] tracking-widest uppercase">Booking Confirmed</Badge>
         <div className="w-8" />
       </div>
 
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6 space-y-5">
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6 space-y-5 pb-10">
 
-        {/* ── Success badge ── */}
-        <div className="text-center py-4">
-          <div className="w-20 h-20 rounded-full bg-scruffs-teal/20 flex items-center justify-center mx-auto mb-4">
-            <div className="w-14 h-14 rounded-full bg-scruffs-teal flex items-center justify-center">
-              <Check size={28} strokeWidth={3} className="text-scruffs-dark" />
+        {/* Success */}
+        <div className="text-center py-5">
+          <div className="success-ring mx-auto mb-4">
+            <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center">
+              <Check size={26} strokeWidth={3} className="text-accent-foreground" />
             </div>
           </div>
-          <h1 className="font-display font-extrabold text-2xl text-scruffs-dark">All booked!</h1>
-          <p className="text-scruffs-muted text-sm mt-1">
+          <h1 className="font-display font-extrabold text-2xl text-foreground">All booked!</h1>
+          <p className="text-muted-foreground text-sm mt-1">
             {booking.petName} is in for a treat. See you soon!
           </p>
         </div>
 
-        {/* ── Booking ref ── */}
-        <div className="card bg-scruffs-beige/50 px-4 py-3 flex items-center justify-between">
+        {/* Booking ref */}
+        <Card className="px-5 py-4 flex items-center justify-between bg-secondary/50 shadow-brand-sm">
           <div>
-            <p className="text-[10px] font-bold text-scruffs-muted uppercase tracking-wider">Booking Reference</p>
-            <p className="font-mono font-bold text-scruffs-dark text-lg tracking-wider mt-0.5">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Booking Reference</p>
+            <p className="font-mono font-bold text-foreground text-lg tracking-wider mt-0.5">
               {booking.bookingRef}
             </p>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-scruffs-teal/20 flex items-center justify-center">
-            <Check size={18} strokeWidth={2.5} className="text-scruffs-teal-dark" />
+          <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center">
+            <Check size={17} strokeWidth={2.5} className="text-accent-foreground" />
           </div>
-        </div>
+        </Card>
 
-        {/* ── Booking summary card ── */}
-        <div className="card overflow-hidden">
-          <div className="bg-scruffs-dark px-4 py-3 flex items-center justify-between">
+        {/* Summary card */}
+        <Card className="overflow-hidden shadow-brand-md">
+          <div className="bg-primary px-5 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <PawPrint size={15} className="text-scruffs-teal" strokeWidth={2} />
-              <span className="text-scruffs-beige font-display font-bold text-sm">{booking.petName}</span>
-              <span className="text-scruffs-beige/50 text-xs">· {booking.petBreed}</span>
+              <PawPrint size={15} className="text-accent" strokeWidth={2} />
+              <span className="text-primary-foreground font-display font-bold text-sm">{booking.petName}</span>
+              <span className="text-primary-foreground/50 text-xs">· {booking.petBreed}</span>
             </div>
-            <span className="font-display font-extrabold text-scruffs-beige">{formatPrice(booking.price)}</span>
+            <span className="font-display font-extrabold text-primary-foreground">{formatPrice(booking.price)}</span>
           </div>
 
-          <div className="divide-y divide-scruffs-border">
-            <ConfirmRow
-              icon={<Scissors size={14} strokeWidth={2} className="text-scruffs-teal-dark" />}
-              label="Service"
-              value={svc?.name ?? booking.service}
-              sub={`~${formatDuration(booking.duration)}`}
-            />
-            <ConfirmRow
-              icon={<CalendarDays size={14} strokeWidth={2} className="text-scruffs-teal-dark" />}
-              label="Date"
-              value={formatDate(booking.slot.date)}
-            />
-            <ConfirmRow
-              icon={<Clock size={14} strokeWidth={2} className="text-scruffs-teal-dark" />}
-              label="Time"
-              value={`${formatTime(booking.slot.startTime)} → ~${formatTime(estimatedEnd)}`}
-            />
-            <ConfirmRow
-              icon={<MapPin size={14} strokeWidth={2} className="text-scruffs-teal-dark" />}
-              label="Location"
-              value={booking.area}
-              sub={[booking.address, booking.buildingNote].filter(Boolean).join(', ')}
-            />
+          <div className="divide-y divide-border">
+            <ConfirmRow icon={<Scissors size={14} className="text-accent-foreground" strokeWidth={2} />} label="Service" value={svc?.name ?? booking.service} sub={`~${formatDuration(booking.duration)}`} />
+            <ConfirmRow icon={<CalendarDays size={14} className="text-accent-foreground" strokeWidth={2} />} label="Date" value={formatDate(booking.slot.date)} />
+            <ConfirmRow icon={<Clock size={14} className="text-accent-foreground" strokeWidth={2} />} label="Time" value={`${formatTime(booking.slot.startTime)} → ~${formatTime(estimatedEnd)}`} />
+            <ConfirmRow icon={<MapPin size={14} className="text-accent-foreground" strokeWidth={2} />} label="Location" value={booking.area} sub={[booking.address, booking.buildingNote].filter(Boolean).join(', ')} />
           </div>
-        </div>
+        </Card>
 
-        {/* ── What's next ── */}
-        <div className="card p-4">
-          <p className="text-xs font-display font-bold text-scruffs-dark uppercase tracking-wide mb-3">What&apos;s Next?</p>
+        {/* What's next */}
+        <Card className="p-5 shadow-brand-sm">
+          <p className="text-xs font-display font-bold text-foreground uppercase tracking-wide mb-3">What&apos;s Next?</p>
           <ul className="space-y-2.5">
             {[
-              { text: 'Your booking is confirmed — no deposit needed' },
-              { text: 'Our groomer will WhatsApp you 30 min before arrival' },
-              { text: 'Mobile salon van arrives at your door' },
-              { text: 'Pay cash or card on the day' },
-            ].map((item, i) => (
+              'Your booking is confirmed — no deposit needed',
+              'Our groomer will WhatsApp you 30 min before arrival',
+              'Mobile salon van arrives at your door',
+              'Pay cash or card on the day',
+            ].map((text, i) => (
               <li key={i} className="flex items-start gap-2.5">
-                <div className="w-4 h-4 rounded-full bg-scruffs-teal/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check size={10} strokeWidth={3} className="text-scruffs-teal-dark" />
+                <div className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check size={10} strokeWidth={3} className="text-accent-foreground" />
                 </div>
-                <p className="text-[12px] text-scruffs-dark">{item.text}</p>
+                <p className="text-[12px] text-foreground">{text}</p>
               </li>
             ))}
           </ul>
-        </div>
+        </Card>
 
-        {/* ── Actions ── */}
-        <div className="space-y-3 pb-4">
+        {/* Actions */}
+        <div className="space-y-3">
           <a
             href={waUrl}
             target="_blank"
@@ -148,57 +133,46 @@ export default async function BookingConfirmationPage({ params }: Props) {
             Send via WhatsApp
           </a>
 
-          <Link
-            href="/my-bookings"
-            className="w-full flex items-center justify-center gap-2 bg-scruffs-beige text-scruffs-dark py-3.5 rounded-2xl font-display font-bold text-sm hover:bg-scruffs-beige/80 transition-colors"
-          >
-            View My Bookings <ChevronRight size={15} strokeWidth={2.5} />
-          </Link>
+          <Button asChild variant="secondary" className="w-full h-12 font-display font-bold">
+            <Link href="/my-bookings">
+              View My Bookings <ChevronRight size={15} />
+            </Link>
+          </Button>
 
-          <Link
-            href="/"
-            className="w-full flex items-center justify-center py-3 text-scruffs-muted text-sm font-semibold hover:text-scruffs-dark transition-colors"
-          >
-            Back to Home
-          </Link>
+          <Button asChild variant="ghost" className="w-full h-10 text-muted-foreground font-semibold">
+            <Link href="/">Back to Home</Link>
+          </Button>
         </div>
 
-        {/* ── Instagram CTA ── */}
-        <div className="card p-4 flex items-center justify-between border-l-4 border-pink-400">
+        {/* Instagram CTA */}
+        <Card className="p-4 flex items-center justify-between border-l-4 border-pink-400 shadow-none">
           <div>
-            <p className="font-bold text-scruffs-dark text-sm">Follow us on Instagram</p>
-            <p className="text-xs text-scruffs-muted">Before & afters, tips & offers</p>
+            <p className="font-bold text-foreground text-sm">Follow us on Instagram</p>
+            <p className="text-xs text-muted-foreground">Before & afters, tips & offers</p>
           </div>
           <a
             href="https://instagram.com/scruffs.ae"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl text-xs font-display font-bold"
+            className="px-4 py-2 bg-gradient-to-br from-pink-500 to-purple-500 text-white rounded-xl text-xs font-display font-bold shadow-sm hover:opacity-90 transition-opacity"
           >
             @scruffs.ae
           </a>
-        </div>
+        </Card>
 
       </main>
     </div>
   );
 }
 
-function ConfirmRow({
-  icon, label, value, sub,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-}) {
+function ConfirmRow({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-3">
+    <div className="flex items-start gap-3 px-5 py-3">
       <div className="mt-0.5 flex-shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold text-scruffs-muted uppercase tracking-wide">{label}</p>
-        <p className="font-semibold text-sm text-scruffs-dark mt-0.5">{value}</p>
-        {sub && <p className="text-[11px] text-scruffs-muted mt-0.5">{sub}</p>}
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">{label}</p>
+        <p className="font-semibold text-sm text-foreground mt-0.5">{value}</p>
+        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
       </div>
     </div>
   );

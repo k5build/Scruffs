@@ -1,8 +1,18 @@
 {
-  "buildCommand": "prisma generate && prisma migrate deploy && next build",
   "framework": "nextjs",
-  "regions": ["dxb1"],
+  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "installCommand": "npm install",
+  "regions": ["fra1"],
   "env": {
-    "NODE_ENV": "production"
+    "DATABASE_URL": "@database-url",
+    "JWT_SECRET": "@jwt-secret",
+    "ADMIN_SECRET": "@admin-secret",
+    "TWILIO_ACCOUNT_SID": "@twilio-account-sid",
+    "TWILIO_AUTH_TOKEN": "@twilio-auth-token",
+    "TWILIO_VERIFY_SID": "@twilio-verify-sid",
+    "TWILIO_WHATSAPP_FROM": "@twilio-whatsapp-from",
+    "BUSINESS_NOTIFY_PHONE": "@business-notify-phone",
+    "RESEND_API_KEY": "@resend-api-key",
+    "RESEND_FROM": "@resend-from"
   }
 }
