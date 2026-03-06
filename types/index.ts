@@ -1,6 +1,13 @@
 export type PetType    = 'DOG' | 'CAT';
-export type PetSize    = 'SMALL' | 'MEDIUM' | 'LARGE';
-export type ServiceKey = 'BASIC' | 'SPECIAL' | 'FULL';
+export type PetSize    = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL';
+export type ServiceKey = 'WASH_TIDY';
+export type AddOnKey   =
+  | 'TRIM'              // Full Groom (Trimming)
+  | 'BUNDLE'            // Full Groom Bundle (Trim + Nails + Teeth)
+  | 'NAIL_GRIND'        // Nail Grind (Dremel)
+  | 'TOOTH_BRUSH'       // Tooth Brushing
+  | 'MEDICATED_SHAMPOO' // Medicated / Flea Shampoo
+  | 'DEMATTING';        // De-matting (per 10 min)
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export interface SavedPet {
@@ -31,10 +38,13 @@ export interface BookingData {
   petNotes: string;
   savedPetId: string;
 
-  // Step 2 – Service & When
-  service:       ServiceKey | null;
-  price:         number;
-  duration:      number;  // minutes
+  // Step 2 – Service & Add-ons & When
+  service:       ServiceKey | null;   // always 'WASH_TIDY'
+  addons:        AddOnKey[];          // selected add-ons
+  basePrice:     number;              // base Wash & Tidy price
+  addonsPrice:   number;              // sum of add-on prices
+  price:         number;              // total = basePrice + addonsPrice
+  duration:      number;              // minutes
   slotId:        string;
   slotDate:      string;
   slotStartTime: string;

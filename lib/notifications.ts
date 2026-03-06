@@ -1,4 +1,4 @@
-import { SERVICES, formatDate, formatTime, formatDuration, formatPrice } from './utils';
+import { BASE_SERVICE, ADDONS, formatDate, formatTime, formatDuration, formatPrice } from './utils';
 
 /* ── Types ─────────────────────────────────────────────────── */
 interface BookingDetails {
@@ -8,6 +8,7 @@ interface BookingDetails {
   petType:       string;
   petSize?:      string | null;
   service:       string;
+  addons?:       string | null; // JSON string
   price:         number;
   duration:      number;
   slotDate:      string;
@@ -22,8 +23,16 @@ interface BookingDetails {
 }
 
 /* ── Helpers ────────────────────────────────────────────────── */
-function svcName(key: string) {
-  return SERVICES[key as keyof typeof SERVICES]?.name ?? key;
+function svcName(_key: string) {
+  return BASE_SERVICE.name;
+}
+
+function addonsLabel(addonsJson: string | null | undefined): string {
+  try {
+    const keys: string[] = JSON.parse(addonsJson ?? '[]');
+    if (!keys.length) return '';
+    return keys.map((k) => ADDONS.find((a) => a.key === k)?.label ?? k).join(', ');
+  } catch { return ''; }
 }
 
 /* ── Email HTML template ─────────────────────────────────────── */
@@ -130,7 +139,7 @@ function businessWaMessage(b: BookingDetails): string {
     ``,
     `📋 *Ref:* ${b.bookingRef}`,
     `🐾 *Pet:* ${b.petName} (${b.petType}${b.petSize ? ', ' + b.petSize : ''}, ${b.petBreed})`,
-    `✂️ *Service:* ${svcName(b.service)} – AED ${b.price}`,
+    `✂️ *Service:* ${svcName(b.service)}${addonsLabel(b.addons) ? ' + ' + addonsLabel(b.addons) : ''} – AED ${b.price}`,
     `📅 *Date:* ${formatDate(b.slotDate)}`,
     `⏰ *Time:* ${formatTime(b.slotStartTime)} → ~${formatTime(estimatedEnd)}`,
     `📍 *Area:* ${b.area}`,
@@ -152,7 +161,7 @@ function customerWaMessage(b: BookingDetails): string {
     ``,
     `📋 Ref: *${b.bookingRef}*`,
     `🐾 ${b.petName} (${b.petBreed})`,
-    `✂️ ${svcName(b.service)}`,
+    `✂️ ${svcName(b.service)}${addonsLabel(b.addons) ? ' + ' + addonsLabel(b.addons) : ''}`,
     `📅 ${formatDate(b.slotDate)}`,
     `⏰ ${formatTime(b.slotStartTime)} → ~${formatTime(estimatedEnd)}`,
     `📍 ${b.area}`,

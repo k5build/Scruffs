@@ -34,9 +34,12 @@ export default function TopBar({ area, showNotification = false }: Props) {
   return (
     <div>
       {/* Brand bar */}
-      <div className="brand-bar flex items-center justify-center gap-3 py-3 px-4">
-        <Image src="/logo-icon-beige.png" alt="Scruffs" width={26} height={26} className="rounded-full opacity-90" />
-        <span className="text-base tracking-[0.22em] font-display font-black">SCRUFFS</span>
+      <div className="brand-bar flex items-center justify-center py-3.5 px-4">
+        <Image src="/logo-icon-beige.png" alt="Scruffs" width={36} height={36} className="rounded-full mr-2.5" />
+        <div className="flex flex-col leading-none">
+          <span className="text-[17px] tracking-[0.25em] font-display font-black">SCRUFFS</span>
+          <span className="text-[8px] tracking-[0.18em] font-display font-bold opacity-60 uppercase">Extraordinary Pet Groomers</span>
+        </div>
       </div>
 
       {/* Location + actions */}

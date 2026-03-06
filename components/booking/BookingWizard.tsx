@@ -14,7 +14,7 @@ import ConfirmStep     from './steps/ConfirmStep';
 const INITIAL: BookingData = {
   petType: null, petSize: null, petName: '', petBreed: '',
   petAge: '', petNotes: '', savedPetId: '',
-  service: null, price: 0, duration: 60,
+  service: 'WASH_TIDY', addons: [], basePrice: 0, addonsPrice: 0, price: 0, duration: 60,
   slotId: '', slotDate: '', slotStartTime: '', slotEndTime: '',
   area: '', address: '', buildingNote: '', mapsLink: '', lat: null, lng: null,
   ownerName: '', ownerEmail: '', ownerPhone: '',
@@ -26,7 +26,7 @@ export default function BookingWizard() {
   const rebookId   = searchParams.get('rebook');
 
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<BookingData>({ ...INITIAL, service: preService ?? null });
+  const [data, setData] = useState<BookingData>({ ...INITIAL });
 
   // Load user profile to auto-fill contact details + area preference
   useEffect(() => {

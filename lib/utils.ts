@@ -94,103 +94,157 @@ export const DUBAI_AREAS = [
 ];
 
 /* ─────────────────────────────────────────
-   SERVICE DEFINITIONS
-   Service keys: BASIC | SPECIAL | FULL
-   Renamed for the UI as:
-     BASIC   → Bath & Brush
-     SPECIAL → Full Groom
-     FULL    → Luxury Spa
+   BASE SERVICE: Wash & Tidy
 ───────────────────────────────────────── */
+export const BASE_SERVICE = {
+  key:     'WASH_TIDY' as const,
+  name:    'Wash & Tidy',
+  tagline: 'Deep clean, blow dry & brush out',
+  includes: [
+    'Luxury Bath & Blow Dry',
+    'Full Brush Out',
+    'Ear Cleaning',
+    'Paw Wipe & Cologne Finish',
+  ],
+};
+
+// Legacy alias so admin pages / confirmation page still work
 export const SERVICES = {
-  BASIC: {
-    key:      'BASIC',
-    name:     'Bath & Brush',
-    tagline:  'Squeaky clean & fresh',
-    icon:     'bath',
-    includes: [
-      'Bath & Blow Dry',
-      'Full Brush Out',
-      'Nail Trim & File',
-      'Ear Cleaning',
-      'Cologne Finish',
-    ],
-    color: '#E8F0EF',
-    accent: '#A3C0BE',
-  },
-  SPECIAL: {
-    key:      'SPECIAL',
-    name:     'Full Groom',
-    tagline:  'Head-to-paw perfection',
-    icon:     'scissors',
-    includes: [
-      'Everything in Bath & Brush',
-      'Haircut & Breed Styling',
-      'Teeth Brushing',
-      'Paw Balm Treatment',
-      'Bandana / Bow',
-    ],
-    popular: true,
-    color: '#EBF0EC',
-    accent: '#3A4F4A',
-  },
-  FULL: {
-    key:      'FULL',
-    name:     'Luxury Spa',
-    tagline:  'The royal treatment',
-    icon:     'sparkles',
-    includes: [
-      'Everything in Full Groom',
-      'De-Shedding Treatment',
-      'Blueberry Facial',
-      'Deep Coat Conditioning',
-      'Paw Massage',
-      'Luxury Gift Pack',
-    ],
-    color: '#F4F0E8',
-    accent: '#B8960C',
-  },
+  WASH_TIDY: BASE_SERVICE,
+  // keep old keys for historical bookings display
+  BASIC:   { key: 'BASIC',   name: 'Wash & Tidy',  tagline: '', includes: [] },
+  SPECIAL: { key: 'SPECIAL', name: 'Full Groom',    tagline: '', includes: [] },
+  FULL:    { key: 'FULL',    name: 'Luxury Spa',    tagline: '', includes: [] },
 } as const;
 
 /* ─────────────────────────────────────────
-   PRICING  (AED)
-   Verified Dubai market rates 2024
+   BASE PRICING  (AED, excl. VAT)
 ───────────────────────────────────────── */
-export const PRICING: Record<string, Record<string, Record<string, number>>> = {
-  DOG: {
-    SMALL:  { BASIC: 150, SPECIAL: 250, FULL: 350 },
-    MEDIUM: { BASIC: 200, SPECIAL: 300, FULL: 450 },
-    LARGE:  { BASIC: 250, SPECIAL: 380, FULL: 580 },
-  },
-  CAT: {
-    DEFAULT: { BASIC: 180, SPECIAL: 280, FULL: 380 },
-  },
+export const BASE_PRICES: Record<string, Record<string, number>> = {
+  DOG: { SMALL: 179, MEDIUM: 219, LARGE: 259, XL: 299 },
+  CAT: { DEFAULT: 149 },
 };
 
-export function getPrice(petType: string, petSize: string | null, service: string): number {
-  if (petType === 'CAT') return PRICING.CAT.DEFAULT[service] ?? 0;
-  const size = petSize ?? 'MEDIUM';
-  return PRICING.DOG[size]?.[service] ?? 0;
+export function getBasePrice(petType: string, petSize: string | null): number {
+  if (petType === 'CAT') return BASE_PRICES.CAT.DEFAULT;
+  return BASE_PRICES.DOG[petSize ?? 'MEDIUM'] ?? 219;
+}
+
+// Legacy compat
+export function getPrice(petType: string, petSize: string | null, _service: string): number {
+  return getBasePrice(petType, petSize);
 }
 
 /* ─────────────────────────────────────────
-   SERVICE DURATIONS (minutes)
-   Based on breed size + service type
+   ADD-ONS  (AED, excl. VAT)
 ───────────────────────────────────────── */
-export const SERVICE_DURATIONS: Record<string, Record<string, Record<string, number>>> = {
-  DOG: {
-    SMALL:  { BASIC: 60,  SPECIAL: 90,  FULL: 120 },
-    MEDIUM: { BASIC: 90,  SPECIAL: 120, FULL: 150 },
-    LARGE:  { BASIC: 120, SPECIAL: 150, FULL: 180 },
+export interface AddOnDef {
+  key:         string;
+  label:       string;
+  description: string;
+  priceDog:    number;
+  priceCat:    number;
+  extraMins:   number;
+  category:    'upgrade' | 'care';
+  exclusive?:  string[];  // keys that cannot be selected together
+}
+
+export const ADDONS: AddOnDef[] = [
+  {
+    key:         'TRIM',
+    label:       'Full Groom (Trimming)',
+    description: 'Breed-style haircut & scissor finish',
+    priceDog:    90,
+    priceCat:    120,
+    extraMins:   30,
+    category:    'upgrade',
+    exclusive:   ['BUNDLE'],
   },
-  CAT: {
-    DEFAULT: { BASIC: 60, SPECIAL: 90, FULL: 120 },
+  {
+    key:         'BUNDLE',
+    label:       'Full Groom Bundle',
+    description: 'Trimming + Nail Grind + Teeth Brushing',
+    priceDog:    130,
+    priceCat:    150,
+    extraMins:   45,
+    category:    'upgrade',
+    exclusive:   ['TRIM', 'NAIL_GRIND', 'TOOTH_BRUSH'],
   },
+  {
+    key:         'NAIL_GRIND',
+    label:       'Nail Grind (Dremel)',
+    description: 'Smooth nails with electric file',
+    priceDog:    29,
+    priceCat:    29,
+    extraMins:   10,
+    category:    'care',
+    exclusive:   ['BUNDLE'],
+  },
+  {
+    key:         'TOOTH_BRUSH',
+    label:       'Tooth Brushing',
+    description: 'Fresh breath & dental hygiene',
+    priceDog:    29,
+    priceCat:    29,
+    extraMins:   10,
+    category:    'care',
+    exclusive:   ['BUNDLE'],
+  },
+  {
+    key:         'MEDICATED_SHAMPOO',
+    label:       'Medicated / Flea Shampoo',
+    description: 'Vet-grade treatment shampoo',
+    priceDog:    39,
+    priceCat:    39,
+    extraMins:   10,
+    category:    'care',
+  },
+  {
+    key:         'DEMATTING',
+    label:       'De-matting (per 10 min)',
+    description: 'Gentle mat removal for long coats',
+    priceDog:    39,
+    priceCat:    39,
+    extraMins:   10,
+    category:    'care',
+  },
+];
+
+export function getAddonPrice(addonKey: string, petType: string): number {
+  const def = ADDONS.find((a) => a.key === addonKey);
+  if (!def) return 0;
+  return petType === 'CAT' ? def.priceCat : def.priceDog;
+}
+
+export function calcAddonsPrice(addonKeys: string[], petType: string): number {
+  return addonKeys.reduce((sum, k) => sum + getAddonPrice(k, petType), 0);
+}
+
+/* ─────────────────────────────────────────
+   DURATIONS (minutes)
+───────────────────────────────────────── */
+export const BASE_DURATIONS: Record<string, Record<string, number>> = {
+  DOG: { SMALL: 60, MEDIUM: 75, LARGE: 90, XL: 120 },
+  CAT: { DEFAULT: 60 },
 };
 
-export function getServiceDuration(petType: string, petSize: string | null, service: string): number {
-  if (petType === 'CAT') return SERVICE_DURATIONS.CAT.DEFAULT[service] ?? 60;
-  const size = petSize ?? 'MEDIUM';
-  return SERVICE_DURATIONS.DOG[size]?.[service] ?? 60;
+export function getBaseDuration(petType: string, petSize: string | null): number {
+  if (petType === 'CAT') return BASE_DURATIONS.CAT.DEFAULT;
+  return BASE_DURATIONS.DOG[petSize ?? 'MEDIUM'] ?? 75;
+}
+
+export function calcTotalDuration(petType: string, petSize: string | null, addonKeys: string[]): number {
+  const base  = getBaseDuration(petType, petSize);
+  const extra = addonKeys.reduce((sum, k) => {
+    const def = ADDONS.find((a) => a.key === k);
+    return sum + (def?.extraMins ?? 0);
+  }, 0);
+  return base + extra;
+}
+
+// Legacy compat
+export function getServiceDuration(petType: string, petSize: string | null, _service: string): number {
+  return getBaseDuration(petType, petSize);
 }
 
 export function formatDuration(minutes: number): string {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, User, Phone, Loader2 } from 'lucide-react';
 import { BookingData } from '@/types';
-import { SERVICES, formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime } from '@/lib/utils';
+import { BASE_SERVICE, ADDONS, formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,6 @@ export default function ConfirmStep({ data, onBack }: Props) {
   const [errors,     setErrors]     = useState<Record<string, string>>({});
   const [apiError,   setApiError]   = useState('');
 
-  const svc = data.service ? SERVICES[data.service] : null;
   const estimatedEnd = data.slotStartTime && data.duration
     ? addMinutesToTime(data.slotStartTime, data.duration)
     : data.slotEndTime;
@@ -51,7 +50,8 @@ export default function ConfirmStep({ data, onBack }: Props) {
         body: JSON.stringify({
           petType: data.petType, petName: data.petName, petBreed: data.petBreed,
           petAge: data.petAge, petSize: data.petSize ?? null, petNotes: data.petNotes || undefined,
-          service: data.service, price: data.price, duration: data.duration,
+          service: data.service ?? 'WASH_TIDY', addons: data.addons,
+          price: data.price, duration: data.duration,
           area: data.area, address: data.address, buildingNote: data.buildingNote || undefined,
           mapsLink: data.mapsLink || undefined, slotId: data.slotId,
           ownerName: ownerName.trim(), ownerPhone: ownerPhone.trim(),
@@ -112,16 +112,34 @@ export default function ConfirmStep({ data, onBack }: Props) {
 
         {/* Detail rows */}
         <div className="divide-y divide-border">
-          <SummaryRow icon={<Scissors size={14} className="text-accent-foreground" strokeWidth={2} />} label="Service" value={svc?.name ?? data.service ?? '—'} sub={data.duration ? `~${formatDuration(data.duration)}` : undefined} />
+          <SummaryRow
+            icon={<Scissors size={14} className="text-accent-foreground" strokeWidth={2} />}
+            label="Service"
+            value={BASE_SERVICE.name}
+            sub={[
+              data.duration ? `~${formatDuration(data.duration)}` : null,
+              data.addons.length > 0
+                ? data.addons.map((k) => ADDONS.find((a) => a.key === k)?.label ?? k).join(', ')
+                : null,
+            ].filter(Boolean).join(' · ') || undefined}
+          />
           <SummaryRow icon={<CalendarDays size={14} className="text-accent-foreground" strokeWidth={2} />} label="Date" value={data.slotDate ? formatDate(data.slotDate) : '—'} />
           <SummaryRow icon={<Clock size={14} className="text-accent-foreground" strokeWidth={2} />} label="Time" value={data.slotStartTime ? `${formatTime(data.slotStartTime)} → ~${formatTime(estimatedEnd)}` : '—'} />
           <SummaryRow icon={<MapPin size={14} className="text-accent-foreground" strokeWidth={2} />} label="Location" value={data.area} sub={[data.address, data.buildingNote].filter(Boolean).join(', ')} />
         </div>
 
         {/* Price footer */}
-        <div className="bg-secondary/60 px-5 py-3 flex items-center justify-between">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Total (pay on the day)</span>
-          <span className="font-display font-extrabold text-foreground text-lg">{formatPrice(data.price)}</span>
+        <div className="bg-secondary/60 px-5 py-3">
+          {data.addons.length > 0 && (
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] text-muted-foreground">Base + Add-ons</span>
+              <span className="text-[11px] text-muted-foreground">AED {data.basePrice} + AED {data.addonsPrice}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Total +VAT · pay on day</span>
+            <span className="font-display font-extrabold text-foreground text-lg">{formatPrice(data.price)}</span>
+          </div>
         </div>
       </Card>
 

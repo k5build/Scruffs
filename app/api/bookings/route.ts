@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { generateBookingRef } from '@/lib/utils';
+import { generateBookingRef, calcAddonsPrice, getBasePrice, calcTotalDuration } from '@/lib/utils';
 import { verifyToken, SESSION_COOKIE } from '@/lib/auth';
 import { sendAllNotifications } from '@/lib/notifications';
+
+const ADDON_KEYS = ['TRIM','BUNDLE','NAIL_GRIND','TOOTH_BRUSH','MEDICATED_SHAMPOO','DEMATTING'] as const;
 
 const CreateBookingSchema = z.object({
   petType:     z.enum(['DOG', 'CAT']),
   petName:     z.string().min(1),
   petBreed:    z.string().min(1),
   petAge:      z.string().min(1),
-  petSize:     z.enum(['SMALL', 'MEDIUM', 'LARGE']).nullable().optional(),
+  petSize:     z.enum(['SMALL', 'MEDIUM', 'LARGE', 'XL']).nullable().optional(),
   petNotes:    z.string().optional(),
-  petId:       z.string().optional(),           // linked pet profile
-  service:     z.enum(['BASIC', 'SPECIAL', 'FULL']),
+  petId:       z.string().optional(),
+  service:     z.string().min(1),
+  addons:      z.array(z.enum(ADDON_KEYS)).optional().default([]),
   price:       z.number().positive(),
   duration:    z.number().int().positive().optional(),
   area:        z.string().min(1),
@@ -50,6 +53,12 @@ export async function POST(request: NextRequest) {
     }
 
     const bookingRef = generateBookingRef();
+    const addons     = data.addons ?? [];
+    // Re-calculate server-side to prevent tampering
+    const basePrice  = getBasePrice(data.petType, data.petSize ?? null);
+    const addPrice   = calcAddonsPrice(addons, data.petType);
+    const totalPrice = basePrice + addPrice;
+    const duration   = data.duration ?? calcTotalDuration(data.petType, data.petSize ?? null, addons);
 
     const booking = await prisma.booking.create({
       data: {
@@ -62,8 +71,9 @@ export async function POST(request: NextRequest) {
         petNotes:     data.petNotes ?? null,
         petId:        data.petId ?? null,
         service:      data.service,
-        price:        data.price,
-        duration:     data.duration ?? 60,
+        addons:       JSON.stringify(addons),
+        price:        totalPrice,
+        duration,
         area:         data.area,
         address:      data.address,
         buildingNote: data.buildingNote ?? null,
@@ -117,6 +127,7 @@ export async function POST(request: NextRequest) {
       petType:       booking.petType,
       petSize:       booking.petSize,
       service:       booking.service,
+      addons:        booking.addons,
       price:         booking.price,
       duration:      booking.duration,
       slotDate:      booking.slot.date,

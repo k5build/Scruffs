@@ -1,16 +1,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Scissors, Bath, PawPrint, Sparkles, Star, ArrowRight, ChevronRight, Clock, Shield, MapPin } from 'lucide-react';
+import { Bath, Scissors, Sparkles, Star, ArrowRight, ChevronRight, Clock, Shield, MapPin, Plus, PawPrint } from 'lucide-react';
 import TopBar from '@/components/TopBar';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const SERVICES = [
-  { key: 'BASIC',   name: 'Bath & Brush',  sub: 'Deep clean & deshed',   icon: Bath,     href: '/book?service=BASIC',   from: 'AED 150' },
-  { key: 'SPECIAL', name: 'Full Groom',    sub: 'Haircut, bath & nails',  icon: Scissors, href: '/book?service=SPECIAL', from: 'AED 250', popular: true },
-  { key: 'FULL',    name: 'Luxury Spa',    sub: 'Premium full treatment', icon: Sparkles, href: '/book?service=FULL',    from: 'AED 350' },
+const PRICING_ROWS = [
+  { label: 'Cat',       price: 149 },
+  { label: 'Dog Small', price: 179 },
+  { label: 'Dog Medium',price: 219 },
+  { label: 'Dog Large', price: 259 },
+  { label: 'Dog XL',    price: 299 },
+];
+
+const ADDONS_PREVIEW = [
+  { icon: Scissors, label: 'Full Groom (Trimming)',    from: 90  },
+  { icon: Sparkles, label: 'Full Groom Bundle',        from: 130 },
 ];
 
 const WHY_US = [
@@ -92,35 +99,52 @@ export default function HomePage() {
           {/* ── Services ── */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-display font-bold text-sm text-foreground uppercase tracking-wide">Grooming Services</h3>
+              <h3 className="font-display font-bold text-sm text-foreground uppercase tracking-wide">Grooming Menu</h3>
               <Link href="/book" className="text-accent-foreground text-xs font-bold flex items-center gap-0.5 hover:underline">
-                View all <ChevronRight size={13} strokeWidth={2.5} />
+                Book now <ChevronRight size={13} strokeWidth={2.5} />
               </Link>
             </div>
-            <div className="space-y-3">
-              {SERVICES.map(({ key, name, sub, icon: Icon, href, from, popular }) => (
-                <Link key={key} href={href}>
-                  <Card className="flex items-center gap-4 px-4 py-4 shadow-brand-sm hover:shadow-brand-md transition-shadow group">
-                    <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-accent/20 transition-colors">
-                      <Icon size={22} className="text-primary" strokeWidth={1.8} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-display font-bold text-foreground text-sm">{name}</p>
-                        {popular && (
-                          <Badge variant="dark" className="text-[9px] tracking-wide">POPULAR</Badge>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-[10px] text-muted-foreground">from</p>
-                      <p className="font-display font-bold text-foreground text-sm">{from}</p>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+
+            {/* Base service */}
+            <Card className="overflow-hidden shadow-brand-md mb-3">
+              <div className="bg-primary px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Bath size={16} className="text-primary-foreground/80" strokeWidth={2} />
+                  <p className="font-display font-bold text-primary-foreground text-sm">Wash & Tidy</p>
+                  <Badge variant="teal" className="text-[9px] tracking-wide">BASE</Badge>
+                </div>
+                <p className="text-[10px] text-primary-foreground/60 font-semibold">+VAT</p>
+              </div>
+              <div className="divide-y divide-border">
+                {PRICING_ROWS.map(({ label, price }) => (
+                  <div key={label} className="flex items-center justify-between px-4 py-2.5">
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="font-display font-bold text-foreground text-sm">AED {price}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Add-ons */}
+            <Card className="overflow-hidden shadow-brand-sm">
+              <div className="bg-secondary px-4 py-3 flex items-center gap-2">
+                <Plus size={14} className="text-accent-foreground" strokeWidth={2.5} />
+                <p className="font-display font-bold text-foreground text-sm">Add-Ons <span className="font-normal text-muted-foreground text-xs">(select during booking)</span></p>
+              </div>
+              <div className="divide-y divide-border">
+                {ADDONS_PREVIEW.map(({ icon: Icon, label, from }) => (
+                  <div key={label} className="flex items-center gap-3 px-4 py-2.5">
+                    <Icon size={14} className="text-accent-foreground flex-shrink-0" strokeWidth={2} />
+                    <p className="flex-1 text-sm font-semibold text-foreground">{label}</p>
+                    <p className="font-display font-bold text-foreground text-sm">from AED {from}</p>
+                  </div>
+                ))}
+                <div className="px-4 py-2.5">
+                  <p className="text-[11px] text-muted-foreground">+ Nail Grind · Tooth Brushing · Medicated Shampoo · De-matting</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Care add-ons from AED 29 each · All prices +VAT (5%)</p>
+                </div>
+              </div>
+            </Card>
           </section>
 
           {/* ── Book CTA ── */}

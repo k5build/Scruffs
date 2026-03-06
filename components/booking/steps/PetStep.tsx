@@ -20,7 +20,8 @@ interface Props {
 const SIZES: { id: PetSize; label: string; range: string }[] = [
   { id: 'SMALL',  label: 'Small',  range: '< 10 kg'  },
   { id: 'MEDIUM', label: 'Medium', range: '10–25 kg' },
-  { id: 'LARGE',  label: 'Large',  range: '> 25 kg'  },
+  { id: 'LARGE',  label: 'Large',  range: '25–40 kg' },
+  { id: 'XL',     label: 'XL',     range: '> 40 kg'  },
 ];
 
 export default function PetStep({ data, onChange, onNext }: Props) {
@@ -145,12 +146,12 @@ export default function PetStep({ data, onChange, onNext }: Props) {
           {data.petType === 'DOG' && (
             <div className="space-y-2">
               <Label>Size</Label>
-              <div className="flex gap-2 mt-2">
+              <div className="grid grid-cols-4 gap-2 mt-2">
                 {SIZES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => { onChange({ petSize: s.id }); setErrors((e) => ({ ...e, petSize: '' })); }}
-                    className={`flex-1 py-3 px-2 rounded-xl border-2 text-center transition-all duration-200 ${
+                    className={`py-3 px-1 rounded-xl border-2 text-center transition-all duration-200 ${
                       data.petSize === s.id
                         ? 'border-primary bg-primary text-primary-foreground shadow-brand-sm'
                         : 'border-border text-foreground hover:border-accent bg-card'

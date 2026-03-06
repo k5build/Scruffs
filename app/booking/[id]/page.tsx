@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
-import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, SERVICES } from '@/lib/utils';
+import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, BASE_SERVICE, ADDONS } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,8 +25,8 @@ export default async function BookingConfirmationPage({ params }: Props) {
 
   if (!booking) notFound();
 
-  const svc          = SERVICES[booking.service as keyof typeof SERVICES];
-  const estimatedEnd = addMinutesToTime(booking.slot.startTime, booking.duration);
+  const bookingAddons = (() => { try { return JSON.parse(booking.addons ?? '[]') as string[]; } catch { return []; } })();
+  const estimatedEnd  = addMinutesToTime(booking.slot.startTime, booking.duration);
   const waUrl        = buildBookingWhatsApp({
     bookingRef:    booking.bookingRef,
     petName:       booking.petName,
@@ -92,7 +92,17 @@ export default async function BookingConfirmationPage({ params }: Props) {
           </div>
 
           <div className="divide-y divide-border">
-            <ConfirmRow icon={<Scissors size={14} className="text-accent-foreground" strokeWidth={2} />} label="Service" value={svc?.name ?? booking.service} sub={`~${formatDuration(booking.duration)}`} />
+            <ConfirmRow
+              icon={<Scissors size={14} className="text-accent-foreground" strokeWidth={2} />}
+              label="Service"
+              value={BASE_SERVICE.name}
+              sub={[
+                `~${formatDuration(booking.duration)}`,
+                bookingAddons.length > 0
+                  ? bookingAddons.map((k) => ADDONS.find((a) => a.key === k)?.label ?? k).join(', ')
+                  : null,
+              ].filter(Boolean).join(' · ')}
+            />
             <ConfirmRow icon={<CalendarDays size={14} className="text-accent-foreground" strokeWidth={2} />} label="Date" value={formatDate(booking.slot.date)} />
             <ConfirmRow icon={<Clock size={14} className="text-accent-foreground" strokeWidth={2} />} label="Time" value={`${formatTime(booking.slot.startTime)} → ~${formatTime(estimatedEnd)}`} />
             <ConfirmRow icon={<MapPin size={14} className="text-accent-foreground" strokeWidth={2} />} label="Location" value={booking.area} sub={[booking.address, booking.buildingNote].filter(Boolean).join(', ')} />
