@@ -86,7 +86,7 @@ export default function BookingWizard() {
             </Link>
           )}
           {/* Logo */}
-          <Image src="/logo-icon-green.png" alt="Scruffs" width={28} height={28} className="rounded-lg flex-shrink-0" />
+          <Image src="/logo-icon-green.png" alt="Scruffs" width={36} height={36} className="rounded-xl flex-shrink-0" />
           <div className="flex-1">
             <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
               Step {step} of 4

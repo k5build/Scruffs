@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight, AlertCircle } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, BASE_SERVICE, ADDONS } from '@/lib/utils';
+import PaymentSection from '@/components/booking/PaymentSection';
 
 export const metadata: Metadata = { title: 'Booking Confirmed – Scruffs.ae' };
 
@@ -33,7 +34,7 @@ export default async function BookingConfirmationPage({ params }: Props) {
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image src="/logo-icon-green.png" alt="Scruffs" width={30} height={30} className="rounded-lg" />
+          <Image src="/logo-icon-green.png" alt="Scruffs" width={38} height={38} className="rounded-xl" />
           <span className="font-bold text-foreground text-sm tracking-widest">SCRUFFS</span>
         </div>
         <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-3 py-1 rounded-full">Confirmed</span>
@@ -120,6 +121,13 @@ export default async function BookingConfirmationPage({ params }: Props) {
             ))}
           </ul>
         </div>
+
+        {/* Payment */}
+        <PaymentSection
+          bookingId={booking.id}
+          amount={booking.price}
+          paymentStatus={booking.paymentStatus}
+        />
 
         {/* Actions */}
         <div className="space-y-3">

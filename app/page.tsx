@@ -42,7 +42,7 @@ const WHY_US = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <TopBar showNotification />
+      <TopBar />
 
       <main className="flex-1 overflow-y-auto pb-28">
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-6">

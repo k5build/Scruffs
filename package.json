@@ -14,8 +14,11 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.10.2",
     "@radix-ui/react-slot": "^1.2.4",
+    "@stripe/react-stripe-js": "^5.6.1",
+    "@stripe/stripe-js": "^8.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
@@ -23,9 +26,11 @@
     "jose": "^6.2.0",
     "lucide-react": "^0.577.0",
     "next": "^14.1.0",
+    "next-auth": "^4.24.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "resend": "^6.9.3",
+    "stripe": "^20.4.0",
     "tailwind-merge": "^2.2.1",
     "twilio": "^5.12.2",
     "zod": "^3.22.4"

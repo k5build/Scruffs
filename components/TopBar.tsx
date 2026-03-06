@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 
 interface Props {
   area?: string;
-  showNotification?: boolean;
 }
 
 export default function TopBar({ area }: Props) {
@@ -21,19 +20,21 @@ export default function TopBar({ area }: Props) {
   }, [area]);
 
   return (
-    <div className="bg-card border-b border-border px-4 py-2.5 flex items-center justify-between sticky top-0 z-30">
-      {/* Logo mark + wordmark */}
-      <Link href="/" className="flex items-center gap-2.5">
+    <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-3">
         <Image
           src="/logo-icon-green.png"
           alt="Scruffs"
-          width={34}
-          height={34}
-          className="rounded-xl"
+          width={44}
+          height={44}
+          className="rounded-2xl flex-shrink-0"
         />
         <div className="flex flex-col leading-none">
-          <span className="text-[15px] font-bold tracking-widest text-foreground">SCRUFFS</span>
-          <span className="text-[8px] font-semibold text-muted-foreground tracking-widest uppercase">Extraordinary Pet Groomers</span>
+          <span className="text-[17px] font-black tracking-[0.18em] text-foreground">SCRUFFS</span>
+          <span className="text-[8px] font-bold text-muted-foreground tracking-[0.2em] uppercase mt-0.5">
+            Extraordinary Pet Groomers
+          </span>
         </div>
       </Link>
 

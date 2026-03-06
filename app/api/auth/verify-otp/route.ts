@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.upsert({
       where:  { phone },
       update: { updatedAt: new Date() },
-      create: { phone },
+      create: { phone, name: null, email: null },
     });
 
     // Sign JWT
