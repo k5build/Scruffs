@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "buildCommand": "npx prisma generate && npx prisma migrate deploy && next build",
   "installCommand": "npm install",
   "regions": ["fra1"],
   "env": {
@@ -13,6 +13,8 @@
     "TWILIO_WHATSAPP_FROM": "@twilio-whatsapp-from",
     "BUSINESS_NOTIFY_PHONE": "@business-notify-phone",
     "RESEND_API_KEY": "@resend-api-key",
-    "RESEND_FROM": "@resend-from"
+    "RESEND_FROM": "@resend-from",
+    "NEXT_PUBLIC_GOOGLE_MAPS_KEY": "@google-maps-key",
+    "NEXT_PUBLIC_APP_URL": "@app-url"
   }
 }

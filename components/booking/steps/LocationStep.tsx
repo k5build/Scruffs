@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Script from 'next/script';
 import { MapPin, Navigation, Link as LinkIcon, Building2, Info, Check } from 'lucide-react';
 import { BookingData } from '@/types';
 import { DUBAI_AREAS } from '@/lib/utils';
@@ -16,11 +17,53 @@ interface Props {
   onBack: () => void;
 }
 
+const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? '';
+
+function matchArea(components: { long_name: string; types: string[] }[]): string {
+  const suburb = components.find((c) =>
+    c.types.includes('sublocality_level_1') ||
+    c.types.includes('sublocality') ||
+    c.types.includes('neighborhood') ||
+    c.types.includes('political')
+  )?.long_name ?? '';
+  return DUBAI_AREAS.find((a) =>
+    a.toLowerCase().includes(suburb.toLowerCase()) ||
+    suburb.toLowerCase().includes(a.toLowerCase())
+  ) ?? '';
+}
+
 export default function LocationStep({ data, onChange, onNext, onBack }: Props) {
-  const [errors, setErrors]       = useState<Record<string, string>>({});
-  const [locating, setLocating]   = useState(false);
-  const [gpsOk, setGpsOk]         = useState(false);
-  const [mapsInput, setMapsInput] = useState(data.mapsLink || '');
+  const [errors, setErrors]         = useState<Record<string, string>>({});
+  const [locating, setLocating]     = useState(false);
+  const [gpsOk, setGpsOk]           = useState(false);
+  const [mapsInput, setMapsInput]   = useState(data.mapsLink || '');
+  const [googleReady, setGoogleReady] = useState(false);
+  const addressRef = useRef<HTMLInputElement>(null);
+
+  // Initialise Google Places Autocomplete on the address input
+  useEffect(() => {
+    if (!googleReady || !addressRef.current) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (window as any).google;
+    if (!g?.maps?.places) return;
+
+    const ac = new g.maps.places.Autocomplete(addressRef.current, {
+      componentRestrictions: { country: 'ae' },
+      fields: ['formatted_address', 'geometry', 'address_components'],
+    });
+
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace();
+      if (!place.geometry?.location) return;
+      const lat  = place.geometry.location.lat() as number;
+      const lng  = place.geometry.location.lng() as number;
+      const addr = place.formatted_address ?? '';
+      const area = matchArea(place.address_components ?? []);
+      onChange({ address: addr, lat, lng, area: area || data.area });
+      setErrors((e) => ({ ...e, address: '', area: '' }));
+      setGpsOk(true);
+    });
+  }, [googleReady]);
 
   const handleGPS = () => {
     if (!navigator.geolocation) return;
@@ -29,14 +72,28 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
         try {
-          const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-          const json = await res.json();
-          const addr = json.display_name ?? '';
-          const suburb = json.address?.suburb ?? json.address?.neighbourhood ?? json.address?.city_district ?? '';
-          const matched = DUBAI_AREAS.find((a) =>
-            a.toLowerCase().includes(suburb.toLowerCase()) || suburb.toLowerCase().includes(a.toLowerCase())
-          ) ?? '';
-          onChange({ lat, lng, address: addr, area: matched || data.area });
+          let addr = '';
+          let area = '';
+
+          if (GMAPS_KEY) {
+            // Use Google Geocoding API
+            const res  = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GMAPS_KEY}`);
+            const json = await res.json();
+            const result = json.results?.[0];
+            addr = result?.formatted_address ?? '';
+            area = matchArea(result?.address_components ?? []);
+          } else {
+            // Fallback: OpenStreetMap Nominatim
+            const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+            const json = await res.json();
+            addr = json.display_name ?? '';
+            const suburb = json.address?.suburb ?? json.address?.neighbourhood ?? json.address?.city_district ?? '';
+            area = DUBAI_AREAS.find((a) =>
+              a.toLowerCase().includes(suburb.toLowerCase()) || suburb.toLowerCase().includes(a.toLowerCase())
+            ) ?? '';
+          }
+
+          onChange({ lat, lng, address: addr, area: area || data.area });
           setGpsOk(true);
           setErrors((e) => ({ ...e, address: '', area: '' }));
         } catch { /* ignore */ } finally { setLocating(false); }
@@ -71,6 +128,14 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
 
   return (
     <div className="animate-fade-in space-y-5 pb-24">
+      {/* Load Google Maps JS (Places library) */}
+      {GMAPS_KEY && (
+        <Script
+          id="gmaps"
+          src={`https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&libraries=places`}
+          onLoad={() => setGoogleReady(true)}
+        />
+      )}
       <div>
         <h2 className="font-display font-extrabold text-2xl text-foreground">Where Are You?</h2>
         <p className="text-muted-foreground text-sm mt-1">
@@ -150,23 +215,26 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
         {errors.area && <p className="text-destructive text-xs">{errors.area}</p>}
       </div>
 
-      {/* Building name */}
+      {/* Building name — Google Places Autocomplete attaches here */}
       <div className="space-y-2">
         <Label htmlFor="address">
-          Building / Villa Name <span className="text-destructive normal-case font-sans">*</span>
+          {GMAPS_KEY ? 'Search Address' : 'Building / Villa Name'}{' '}
+          <span className="text-destructive normal-case font-sans">*</span>
         </Label>
         <div className="relative mt-2">
           <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" strokeWidth={2} />
-          <Input
+          <input
             id="address"
+            ref={addressRef}
             type="text"
             value={data.address}
             onChange={(e) => { onChange({ address: e.target.value }); setErrors((x) => ({ ...x, address: '' })); }}
-            placeholder="e.g. Marina Diamond 3, Al Fattan Tower…"
-            className={`pl-9 ${errors.address ? 'border-destructive ring-destructive/20' : ''}`}
+            placeholder={GMAPS_KEY ? 'Start typing your address…' : 'e.g. Marina Diamond 3, Al Fattan Tower…'}
+            className={`flex h-11 w-full rounded-xl border bg-card pl-9 pr-4 py-2.5 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent ${errors.address ? 'border-destructive' : 'border-border'}`}
             aria-invalid={!!errors.address}
           />
         </div>
+        {GMAPS_KEY && <p className="text-[11px] text-muted-foreground">Google Maps autocomplete — restricted to UAE addresses</p>}
         {errors.address && <p className="text-destructive text-xs">{errors.address}</p>}
       </div>
 
