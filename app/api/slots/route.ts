@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'date param required' }, { status: 400 });
     }
 
-    // Ensure slots are pre-generated
-    await ensureSlotsExist(90);
+    // Ensure slots exist for the requested date only
+    await ensureSlotsExist(date);
 
     const slots = await prisma.timeSlot.findMany({
       where: {
