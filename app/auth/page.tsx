@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Phone, ChevronRight, Loader2 } from 'lucide-react';
-import { Suspense } from 'react';
 
 function AuthForm() {
   const router       = useRouter();
@@ -23,18 +22,32 @@ function AuthForm() {
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone.trim()) { setError('Enter your phone number'); return; }
+    const cleaned = phone.trim();
+    if (!cleaned) { setError('Enter your phone number'); return; }
+
+    // Basic UAE validation — accept 05xxxxxxxx, 9715xxxxxxxx, 5xxxxxxxx
+    const digits = cleaned.replace(/\D/g, '');
+    const valid  =
+      (digits.startsWith('05')  && digits.length === 10) ||
+      (digits.startsWith('5')   && digits.length === 9)  ||
+      (digits.startsWith('971') && digits.length >= 12)  ||
+      (digits.startsWith('+971'));
+    if (!valid) {
+      setError('Enter a valid UAE number — e.g. 050 123 4567 or +971 50 123 4567');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
       const res  = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ phone: phone.trim() }),
+        body:    JSON.stringify({ phone: cleaned }),
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? 'Something went wrong'); return; }
-      sessionStorage.setItem('auth_phone', phone.trim());
+      sessionStorage.setItem('auth_phone', json.phone); // store normalized form
       if (json.devOtp) sessionStorage.setItem('auth_dev_otp', json.devOtp);
       router.push('/auth/verify');
     } catch {
@@ -62,19 +75,18 @@ function AuthForm() {
         <h1 className="text-primary-foreground font-black text-4xl tracking-[0.12em] mb-1">SCRUFFS</h1>
         <p className="text-primary-foreground/70 text-xs font-semibold tracking-widest uppercase">Extraordinary Pet Groomers</p>
         <p className="text-primary-foreground/60 text-sm mt-4 max-w-xs leading-relaxed">
-          Sign in to save your pets, track bookings, and rebook in seconds.
+          Dubai&apos;s mobile pet grooming — we come to your door.
         </p>
       </div>
 
       <main className="flex-1 max-w-lg mx-auto w-full px-5 py-8 space-y-4">
 
-        {/* Social login buttons */}
+        {/* Social login */}
         <div className="space-y-3">
           <a
             href="/api/auth/google"
-            className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl px-4 h-13 py-3.5 hover:bg-secondary/50 transition-colors"
+            className="w-full flex items-center gap-3 bg-card border border-border rounded-2xl px-4 py-3.5 hover:bg-secondary/50 transition-colors"
           >
-            {/* Google logo */}
             <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -86,9 +98,8 @@ function AuthForm() {
 
           <a
             href="/api/auth/apple"
-            className="w-full flex items-center gap-3 bg-foreground border border-border rounded-2xl px-4 h-13 py-3.5 hover:opacity-90 transition-opacity"
+            className="w-full flex items-center gap-3 bg-foreground border border-border rounded-2xl px-4 py-3.5 hover:opacity-90 transition-opacity"
           >
-            {/* Apple logo */}
             <svg className="w-5 h-5 flex-shrink-0 text-background" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
             </svg>
@@ -116,20 +127,19 @@ function AuthForm() {
           </div>
 
           <form onSubmit={handlePhoneSubmit} className="space-y-3">
-            <div className="relative">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
-                <span className="text-base">🇦🇪</span>
-                <span className="text-sm font-bold text-muted-foreground">+971</span>
-              </div>
+            <div>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => { setPhone(e.target.value); setError(''); }}
-                placeholder="50 123 4567"
-                className="input-field pl-20"
+                placeholder="050 123 4567 or +971 50 123 4567"
+                className="input-field"
                 autoComplete="tel"
-                inputMode="numeric"
+                inputMode="tel"
               />
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Accepts: 05xxxxxxxx · 9715xxxxxxxx · +971 5x xxx xxxx
+              </p>
             </div>
 
             {error && <p className="text-destructive text-sm font-medium">{error}</p>}
@@ -156,10 +166,13 @@ function AuthForm() {
         </p>
 
         {/* Guest */}
-        <div className="text-center">
-          <Link href="/" className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
-            Continue as guest
-          </Link>
+        <div className="text-center pb-4">
+          <a
+            href="/api/auth/guest"
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Browse as guest
+          </a>
         </div>
 
       </main>

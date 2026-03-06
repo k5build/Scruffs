@@ -64,18 +64,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const isDev = process.env.NODE_ENV !== 'production';
-
     if (!sent) {
-      // Dev mode: log OTP to console
-      console.log(`\n[Scruffs DEV] OTP for ${phone}: ${code}\n`);
+      console.log(`\n[Scruffs] OTP for ${phone}: ${code}\n`);
     }
 
     return NextResponse.json({
       success: true,
       phone,
-      // Only expose OTP in development when Twilio not configured
-      ...(isDev && !sent ? { devOtp: code } : {}),
+      // Return devOtp whenever SMS wasn't sent (Twilio not configured)
+      // so the user can test the flow without real SMS setup
+      ...(!sent ? { devOtp: code } : {}),
     });
   } catch (err) {
     console.error('POST /api/auth/send-otp:', err);
