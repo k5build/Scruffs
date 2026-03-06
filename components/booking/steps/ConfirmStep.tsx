@@ -65,6 +65,17 @@ export default function ConfirmStep({ data, onBack }: Props) {
         } catch { /* ignore */ }
       }
 
+      // Save location for next booking
+      try {
+        localStorage.setItem('scruffs_last_location', JSON.stringify({
+          area:         data.area,
+          address:      data.address,
+          buildingNote: data.buildingNote || '',
+          lat:          data.lat,
+          lng:          data.lng,
+        }));
+      } catch { /* ignore */ }
+
       try {
         const raw      = localStorage.getItem('scruffs_bookings');
         const bookings = raw ? JSON.parse(raw) : [];
