@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, User, Phone, Loader2 } from 'lucide-react';
 import { BookingData } from '@/types';
-import { SERVICES, formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp } from '@/lib/utils';
+import { SERVICES, formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
