@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Script from 'next/script';
-import { MapPin, Navigation, Link as LinkIcon, Building2, Info, Check, RotateCcw, ChevronRight } from 'lucide-react';
+import { MapPin, Navigation, Link as LinkIcon, Building2, Info, Check, RotateCcw, ChevronRight, MoveIcon } from 'lucide-react';
 import { BookingData } from '@/types';
 import { DUBAI_AREAS } from '@/lib/utils';
 
@@ -23,6 +23,9 @@ interface SavedLocation {
 
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? '';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GMaps = any;
+
 function matchArea(components: { long_name: string; types: string[] }[]): string {
   const suburb = components.find((c) =>
     c.types.includes('sublocality_level_1') ||
@@ -36,42 +39,125 @@ function matchArea(components: { long_name: string; types: string[] }[]): string
   ) ?? '';
 }
 
-function MapPreview({ lat, lng, address }: { lat: number; lng: number; address: string }) {
-  const staticMapUrl = GMAPS_KEY
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=16&size=640x280&scale=2&markers=color:0x5A9E8F%7Clabel:%7C${lat},${lng}&style=feature:all%7Csaturation:-15%7Clightness:5&key=${GMAPS_KEY}`
-    : null;
+/* ─── Interactive map (Talabat-style fixed pin + draggable map) ─── */
+function LiveMap({
+  lat, lng, address, onMoved,
+}: {
+  lat: number;
+  lng: number;
+  address: string;
+  onMoved: (lat: number, lng: number, addr: string, area: string) => void;
+}) {
+  const mapDivRef  = useRef<HTMLDivElement>(null);
+  const mapObjRef  = useRef<GMaps>(null);
+  const [dragging, setDragging] = useState(false);
+  const lastPos    = useRef({ lat, lng });
 
-  if (!staticMapUrl) return null;
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (window as any).google;
+    if (!g?.maps || !mapDivRef.current) return;
+
+    const map: GMaps = new g.maps.Map(mapDivRef.current, {
+      center:            { lat, lng },
+      zoom:              17,
+      disableDefaultUI:  true,
+      gestureHandling:   'greedy',
+      styles: [
+        { featureType: 'poi',        elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit',    elementType: 'labels', stylers: [{ visibility: 'off' }] },
+        { featureType: 'road',       elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+        { featureType: 'road',       elementType: 'labels.text.fill', stylers: [{ color: '#888888' }] },
+        { featureType: 'landscape',  elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+        { featureType: 'water',      elementType: 'geometry', stylers: [{ color: '#c9e4f0' }] },
+        { featureType: 'building',   elementType: 'geometry.fill', stylers: [{ color: '#e8e8e8' }] },
+      ],
+    });
+
+    mapObjRef.current = map;
+
+    map.addListener('dragstart', () => setDragging(true));
+
+    map.addListener('idle', async () => {
+      setDragging(false);
+      const center = map.getCenter();
+      const newLat = center.lat() as number;
+      const newLng = center.lng() as number;
+
+      // Skip if barely moved
+      if (
+        Math.abs(newLat - lastPos.current.lat) < 0.0001 &&
+        Math.abs(newLng - lastPos.current.lng) < 0.0001
+      ) return;
+
+      lastPos.current = { lat: newLat, lng: newLng };
+
+      try {
+        let addr = '';
+        let area = '';
+        if (GMAPS_KEY) {
+          const res  = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${newLat},${newLng}&key=${GMAPS_KEY}`);
+          const json = await res.json();
+          const result = json.results?.[0];
+          addr = result?.formatted_address ?? '';
+          area = matchArea(result?.address_components ?? []);
+        }
+        onMoved(newLat, newLng, addr, area);
+      } catch { /* ignore */ }
+    });
+
+    return () => g.maps.event.clearInstanceListeners(map);
+  // Only run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="bg-card border border-primary/30 rounded-2xl overflow-hidden">
-      {/* Map image */}
-      <div className="relative w-full h-44 bg-secondary overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={staticMapUrl}
-          alt="Your location on map"
-          className="w-full h-full object-cover"
-        />
-        {/* Pin overlay — centre of map */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex flex-col items-center -mt-5">
-            <div className="w-9 h-9 rounded-full bg-primary border-[3px] border-white shadow-lg flex items-center justify-center">
-              <MapPin size={16} className="text-primary-foreground" strokeWidth={2.5} fill="currentColor" />
+    <div className="bg-card border-2 border-primary/40 rounded-2xl overflow-hidden shadow-sm">
+      {/* Map canvas */}
+      <div className="relative" style={{ height: 220 }}>
+        <div ref={mapDivRef} className="w-full h-full" />
+
+        {/* Fixed centre pin — stays still while map drags underneath */}
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none"
+             style={{ paddingBottom: '50%' }}>
+          <div className={`flex flex-col items-center transition-transform duration-150 ${dragging ? '-translate-y-2' : ''}`}>
+            {/* Pin shadow */}
+            <div className={`w-3 h-1.5 rounded-full bg-black/20 transition-all duration-150 mt-0.5 ${dragging ? 'w-4 opacity-50' : 'opacity-30'}`} />
+            {/* Pin body */}
+            <div className="w-10 h-10 rounded-full bg-primary border-[3px] border-white shadow-xl flex items-center justify-center -mt-1.5">
+              <MapPin size={18} className="text-primary-foreground" strokeWidth={2.5} fill="currentColor" />
             </div>
-            <div className="w-2 h-2 rounded-full bg-primary/40 mt-0.5" />
           </div>
         </div>
-        {/* Verified badge */}
-        <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
-          <Check size={10} strokeWidth={3} />
-          Location confirmed
-        </div>
+
+        {/* Drag hint */}
+        {!dragging && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-foreground/80 backdrop-blur-sm text-background text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
+            <MoveIcon size={10} />
+            Drag map to fine-tune pin
+          </div>
+        )}
+
+        {/* Dragging pulse */}
+        {dragging && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1.5 rounded-full pointer-events-none">
+            Adjusting…
+          </div>
+        )}
       </div>
-      {/* Address label */}
-      <div className="px-4 py-3 flex items-start gap-2.5">
-        <MapPin size={14} className="text-primary flex-shrink-0 mt-0.5" strokeWidth={2} />
-        <p className="text-sm text-foreground font-medium leading-snug">{address}</p>
+
+      {/* Address pill below map */}
+      <div className="px-4 py-3 flex items-start gap-2.5 border-t border-border">
+        <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <MapPin size={12} className="text-primary" strokeWidth={2.5} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Pinned address</p>
+          <p className="text-sm font-semibold text-foreground leading-snug">{address || 'Locating…'}</p>
+        </div>
+        <div className="flex-shrink-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Check size={9} strokeWidth={3} /> Confirmed
+        </div>
       </div>
     </div>
   );
@@ -89,7 +175,6 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
   const [showForm, setShowForm]         = useState(!data.address);
   const addressRef = useRef<HTMLInputElement>(null);
 
-  // Load saved location from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem('scruffs_last_location');
@@ -98,12 +183,9 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
         if (loc.address) setSavedLoc(loc);
       }
     } catch { /* ignore */ }
-
-    // If data already has an address (e.g. rebook), show map immediately
     if (data.address && data.lat && data.lng) setGpsOk(true);
   }, []);
 
-  // Initialise Google Places Autocomplete
   useEffect(() => {
     if (!googleReady || !addressRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,14 +212,17 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleReady]);
 
-  const applyLocation = (loc: SavedLocation) => {
+  const handleMapMoved = useCallback((lat: number, lng: number, addr: string, area: string) => {
+    if (addr) setAddressInput(addr);
     onChange({
-      area:         loc.area,
-      address:      loc.address,
-      buildingNote: loc.buildingNote,
-      lat:          loc.lat,
-      lng:          loc.lng,
+      lat, lng,
+      ...(addr  ? { address: addr }  : {}),
+      ...(area  ? { area }           : {}),
     });
+  }, [onChange]);
+
+  const applyLocation = (loc: SavedLocation) => {
+    onChange({ area: loc.area, address: loc.address, buildingNote: loc.buildingNote, lat: loc.lat, lng: loc.lng });
     setAddressInput(loc.address);
     setGpsOk(!!(loc.lat && loc.lng));
     setUsingSaved(true);
@@ -173,9 +258,11 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
           onChange({ lat, lng, address: addr, area: area || data.area });
           setGpsOk(true);
           setErrors((e) => ({ ...e, address: '', area: '' }));
+          setShowForm(false);
         } catch { /* ignore */ } finally { setLocating(false); }
       },
-      () => setLocating(false)
+      () => setLocating(false),
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -187,7 +274,6 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
     } else {
       onChange({ mapsLink: val });
     }
-    setErrors((e) => ({ ...e, mapsLink: '' }));
   };
 
   const validate = () => {
@@ -203,7 +289,7 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
     onNext();
   };
 
-  const hasMap = !!(data.lat && data.lng && data.address);
+  const hasMap = !!(data.lat && data.lng) && googleReady;
 
   return (
     <div className="animate-fade-in space-y-5 pb-24">
@@ -218,7 +304,7 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
       <div>
         <h2 className="font-bold text-2xl text-foreground">Where Are You?</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          We cover all Dubai areas — confirm your pin on the map
+          Pin your exact location — drag the map to fine-tune
         </p>
       </div>
 
@@ -231,8 +317,12 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Last used address</p>
-              <p className="font-bold text-foreground text-sm leading-snug truncate">{savedLoc.address}</p>
-              {savedLoc.area && <p className="text-xs text-muted-foreground mt-0.5">{savedLoc.area}{savedLoc.buildingNote ? ` · ${savedLoc.buildingNote}` : ''}</p>}
+              <p className="font-bold text-foreground text-sm leading-snug">{savedLoc.address}</p>
+              {savedLoc.area && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {savedLoc.area}{savedLoc.buildingNote ? ` · ${savedLoc.buildingNote}` : ''}
+                </p>
+              )}
             </div>
           </div>
 
@@ -243,7 +333,11 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
                 <span className="text-xs font-bold text-primary">Using this address</span>
               </div>
               <button
-                onClick={() => { setUsingSaved(false); setShowForm(true); setGpsOk(false); onChange({ area: '', address: '', lat: null, lng: null, buildingNote: '' }); setAddressInput(''); }}
+                onClick={() => {
+                  setUsingSaved(false); setShowForm(true); setGpsOk(false);
+                  onChange({ area: '', address: '', lat: null, lng: null, buildingNote: '' });
+                  setAddressInput('');
+                }}
                 className="h-9 px-3 rounded-xl border border-border text-xs font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors flex items-center gap-1.5"
               >
                 <RotateCcw size={12} strokeWidth={2.5} /> Change
@@ -253,56 +347,62 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
             <div className="border-t border-border flex">
               <button
                 onClick={() => applyLocation(savedLoc)}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
               >
                 Use this address <ChevronRight size={14} />
               </button>
               <div className="w-px bg-border" />
               <button
                 onClick={() => { setSavedLoc(null); setShowForm(true); }}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
-                Enter new address
+                New address
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Map preview ── */}
+      {/* ── LIVE MAP ── */}
       {hasMap && (
-        <MapPreview lat={data.lat!} lng={data.lng!} address={data.address} />
+        <LiveMap
+          lat={data.lat!}
+          lng={data.lng!}
+          address={data.address}
+          onMoved={handleMapMoved}
+        />
       )}
 
-      {/* ── Location form ── */}
+      {/* ── GPS Button ── */}
+      {(showForm || !savedLoc) && (
+        <button onClick={handleGPS} disabled={locating} className="w-full text-left disabled:opacity-60">
+          <div className={`bg-card border rounded-2xl flex items-center gap-4 p-4 transition-all duration-150 ${
+            gpsOk ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+          }`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${gpsOk ? 'bg-primary' : 'bg-secondary'}`}>
+              {locating ? (
+                <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              ) : gpsOk ? (
+                <Check size={21} className="text-primary-foreground" strokeWidth={2.5} />
+              ) : (
+                <Navigation size={21} className="text-primary" strokeWidth={2} />
+              )}
+            </div>
+            <div>
+              <p className="font-bold text-sm text-foreground">
+                {locating ? 'Getting your location…' : gpsOk ? 'Location detected' : 'Use my GPS location'}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {gpsOk ? 'Map shown above · drag to adjust' : 'Auto-fill address + open map'}
+              </p>
+            </div>
+          </div>
+        </button>
+      )}
+
+      {/* Form fields — shown when no GPS or changing */}
       {(showForm || !savedLoc) && (
         <>
-          {/* GPS Button */}
-          <button onClick={handleGPS} disabled={locating} className="w-full text-left disabled:opacity-60">
-            <div className={`bg-card border rounded-2xl flex items-center gap-4 p-4 transition-all duration-150 ${
-              gpsOk ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
-            }`}>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${gpsOk ? 'bg-primary' : 'bg-secondary'}`}>
-                {locating ? (
-                  <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                ) : gpsOk ? (
-                  <Check size={21} className="text-primary-foreground" strokeWidth={2.5} />
-                ) : (
-                  <Navigation size={21} className="text-primary" strokeWidth={2} />
-                )}
-              </div>
-              <div>
-                <p className="font-bold text-sm text-foreground">
-                  {locating ? 'Getting your location…' : gpsOk ? 'Location detected' : 'Use my GPS location'}
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {gpsOk ? 'Tap to re-detect' : 'Auto-fill your address from GPS'}
-                </p>
-              </div>
-            </div>
-          </button>
-
-          {/* OR divider */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">or type it</span>
@@ -344,7 +444,7 @@ export default function LocationStep({ data, onChange, onNext, onBack }: Props) 
             {errors.area && <p className="text-destructive text-xs">{errors.area}</p>}
           </div>
 
-          {/* Address */}
+          {/* Address search */}
           <div className="space-y-2">
             <label htmlFor="address" className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
               {GMAPS_KEY ? 'Search Address' : 'Building / Villa Name'} <span className="text-destructive">*</span>
