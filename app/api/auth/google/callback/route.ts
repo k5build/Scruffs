@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     // Issue session cookie
     const jwtToken = await signToken(user.id);
-    const response = NextResponse.redirect(`${appUrl}/`);
+    const response = NextResponse.redirect(`${appUrl}/?welcome=1`);
     response.cookies.set(SESSION_COOKIE, jwtToken, {
       httpOnly: true,
       secure:   process.env.NODE_ENV === 'production',

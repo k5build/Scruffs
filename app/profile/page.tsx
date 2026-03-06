@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 
-interface UserData { id: string; phone: string; name: string | null; email: string | null; }
+interface UserData { id: string; phone: string | null; name: string | null; email: string | null; }
 interface Pet { id: string; name: string; type: string; breed: string; size: string | null; age: string; notes: string | null; }
 interface Booking { id: string; bookingRef: string; petName: string; service: string; price: number; area: string; status: string; slot: { date: string; startTime: string }; }
 
@@ -81,7 +81,7 @@ function ProfileContent() {
   }
   if (!user) return null;
 
-  const initials = (user.name ?? user.phone).slice(0, 2).toUpperCase();
+  const initials = (user.name ?? user.email ?? user.phone ?? 'SC').slice(0, 2).toUpperCase();
 
   return (
     <main className="flex-1 max-w-lg mx-auto w-full px-4 py-5 pb-28 space-y-5">
@@ -95,7 +95,7 @@ function ProfileContent() {
             </div>
             <div>
               <p className="text-primary-foreground font-bold text-base leading-tight">{user.name ?? 'Welcome!'}</p>
-              <p className="text-primary-foreground/60 text-xs">{user.phone}</p>
+              <p className="text-primary-foreground/60 text-xs">{user.phone ?? user.email ?? 'Google account'}</p>
             </div>
           </div>
           <button onClick={() => setEditMode((v) => !v)} className="w-8 h-8 rounded-xl bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/70 hover:bg-primary-foreground/20 transition-colors">
@@ -121,11 +121,13 @@ function ProfileContent() {
           </div>
         ) : (
           <div className="px-5 py-4 space-y-2.5">
-            <div className="flex items-center gap-3 text-sm">
-              <Phone size={14} className="text-muted-foreground flex-shrink-0" strokeWidth={2} />
-              <span className="text-foreground font-medium">{user.phone}</span>
-              <span className="text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-2 py-0.5 rounded-full">Verified</span>
-            </div>
+            {user.phone && (
+              <div className="flex items-center gap-3 text-sm">
+                <Phone size={14} className="text-muted-foreground flex-shrink-0" strokeWidth={2} />
+                <span className="text-foreground font-medium">{user.phone}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-2 py-0.5 rounded-full">Verified</span>
+              </div>
+            )}
             {user.email && (
               <div className="flex items-center gap-3 text-sm">
                 <Mail size={14} className="text-muted-foreground flex-shrink-0" strokeWidth={2} />
