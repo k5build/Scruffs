@@ -1,19 +1,35 @@
 import Link from 'next/link';
-import { Bath, Scissors, Sparkles, Star, ArrowRight, ChevronRight, Clock, Shield, MapPin, Plus, PawPrint } from 'lucide-react';
+import Image from 'next/image';
+import { Bath, Scissors, Sparkles, Star, ArrowRight, ChevronRight, Clock, Shield, MapPin, PawPrint, Check, Droplets, Wind, Ear, Flower2 } from 'lucide-react';
 import TopBar from '@/components/TopBar';
 import BottomNav from '@/components/BottomNav';
 
-const PRICING_ROWS = [
-  { label: 'Cat',        price: 149 },
-  { label: 'Dog Small',  price: 179 },
-  { label: 'Dog Medium', price: 219 },
-  { label: 'Dog Large',  price: 259 },
-  { label: 'Dog XL',     price: 299 },
+/* ─── Service includes (matches BASE_SERVICE in utils) ─── */
+const SERVICE_INCLUDES = [
+  { icon: Droplets,  label: 'Luxury Bath',         sub: 'Premium shampoo & conditioner' },
+  { icon: Wind,      label: 'Blow Dry',             sub: 'Full professional dry' },
+  { icon: Bath,      label: 'Full Brush Out',       sub: 'Detangle & de-shed' },
+  { icon: Ear,       label: 'Ear Cleaning',         sub: 'Safe & gentle' },
+  { icon: PawPrint,  label: 'Paw Wipe',             sub: 'Pads cleaned & trimmed' },
+  { icon: Flower2,   label: 'Cologne Finish',       sub: 'Fresh & fragrant' },
 ];
 
-const ADDONS_PREVIEW = [
-  { icon: Scissors,  label: 'Full Groom (Trimming)', from: 90  },
-  { icon: Sparkles,  label: 'Full Groom Bundle',     from: 130 },
+/* ─── Dog size pricing ─── */
+const DOG_SIZES = [
+  { size: 'Small',  range: '< 10 kg',  price: 179, mins: '45–60' },
+  { size: 'Medium', range: '10–25 kg', price: 219, mins: '60–90' },
+  { size: 'Large',  range: '25–40 kg', price: 259, mins: '90–120' },
+  { size: 'XL',     range: '> 40 kg',  price: 299, mins: '120+' },
+];
+
+/* ─── Add-ons ─── */
+const ADDONS_FULL = [
+  { icon: Scissors, label: 'Full Groom',     sub: 'Breed-style haircut & scissor finish',   price: 'from AED 90',  mins: '+30 min', highlight: true },
+  { icon: Sparkles, label: 'Groom Bundle',   sub: 'Trimming + Nail Grind + Teeth Brushing', price: 'from AED 130', mins: '+45 min', highlight: true },
+  { icon: PawPrint, label: 'Nail Grind',     sub: 'Smooth nails with electric file',        price: 'AED 29',       mins: '+10 min' },
+  { icon: Star,     label: 'Teeth Brushing', sub: 'Fresh breath & dental hygiene',          price: 'AED 29',       mins: '+10 min' },
+  { icon: Droplets, label: 'Medicated Shampoo', sub: 'Vet-grade treatment shampoo',         price: 'AED 39',       mins: '+10 min' },
+  { icon: Bath,     label: 'De-matting',     sub: 'Gentle mat removal for long coats',      price: 'AED 39',       mins: '/10 min' },
 ];
 
 const WHY_US = [
@@ -29,10 +45,14 @@ export default function HomePage() {
       <TopBar showNotification />
 
       <main className="flex-1 overflow-y-auto pb-28">
-        <div className="max-w-lg mx-auto px-4 pt-5 space-y-5">
+        <div className="max-w-lg mx-auto px-4 pt-5 space-y-6">
 
           {/* ── Hero card ── */}
-          <div className="promo-card p-5 relative">
+          <div className="promo-card p-5 relative overflow-hidden">
+            {/* Decorative logo watermark */}
+            <div className="absolute right-0 bottom-0 opacity-[0.06] pointer-events-none">
+              <Image src="/logo-dark.png" alt="" width={160} height={100} className="object-contain" />
+            </div>
             <div className="relative z-10">
               <span className="inline-block bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 border border-primary/20">
                 Est. 2022 · Dubai
@@ -66,6 +86,158 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* ── Grooming Menu ── */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Grooming Menu</p>
+              <Link href="/book" className="text-primary text-xs font-semibold flex items-center gap-0.5">
+                Book now <ChevronRight size={13} strokeWidth={2.5} />
+              </Link>
+            </div>
+
+            {/* ── BASE SERVICE CARD ── */}
+            <div className="bg-card border border-border rounded-2xl overflow-hidden mb-3">
+              {/* Card header */}
+              <div className="bg-primary px-5 py-4 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Bath size={16} className="text-primary-foreground" strokeWidth={2} />
+                    <span className="text-primary-foreground font-bold text-base">Wash &amp; Tidy</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider bg-primary-foreground/15 text-primary-foreground px-2 py-0.5 rounded-full">
+                      Base Service
+                    </span>
+                  </div>
+                  <p className="text-primary-foreground/70 text-xs">Deep clean · Blow dry · Brush out</p>
+                </div>
+                <Image src="/logo-icon-beige.png" alt="Scruffs" width={36} height={36} className="rounded-xl opacity-70" />
+              </div>
+
+              {/* What's included */}
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Always Included</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {SERVICE_INCLUDES.map(({ icon: Icon, label, sub }) => (
+                    <div key={label} className="flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon size={13} className="text-primary" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-foreground leading-tight">{label}</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{sub}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pricing grid — Dog */}
+              <div className="px-5 pt-4 pb-2">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Dog Pricing</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {DOG_SIZES.map(({ size, range, price, mins }) => (
+                    <div key={size} className="bg-secondary/60 rounded-xl p-2.5 text-center border border-border">
+                      <p className="text-[10px] font-bold text-foreground uppercase">{size}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">{range}</p>
+                      <p className="font-bold text-foreground text-sm mt-1.5">AED {price}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5 flex items-center justify-center gap-0.5">
+                        <Clock size={8} strokeWidth={2} />{mins}m
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cat pricing */}
+              <div className="px-5 pt-3 pb-4">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Cat Pricing</p>
+                <div className="bg-secondary/60 rounded-xl p-3 border border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <PawPrint size={14} className="text-primary" strokeWidth={2} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">All Cats</p>
+                      <p className="text-[10px] text-muted-foreground">Short & long hair · ~45–60 min</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-foreground text-base">AED 149</p>
+                    <p className="text-[10px] text-muted-foreground">+VAT</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* VAT footer */}
+              <div className="px-5 py-2.5 border-t border-border bg-secondary/30">
+                <p className="text-[11px] text-muted-foreground text-center">All prices exclude 5% VAT · Pay on the day</p>
+              </div>
+            </div>
+
+            {/* ── ADD-ONS ── */}
+            <div className="bg-card border border-border rounded-2xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-border flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-foreground text-sm">Upgrade Add-Ons</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Added to your base service during booking</p>
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-secondary text-muted-foreground px-2 py-1 rounded-full">Optional</span>
+              </div>
+
+              {/* Upgrade add-ons (highlighted) */}
+              <div className="px-5 py-4 space-y-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Core Upgrades</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {ADDONS_FULL.filter((a) => a.highlight).map(({ icon: Icon, label, sub, price, mins }) => (
+                    <div key={label} className="bg-primary/5 border border-primary/20 rounded-xl p-3.5">
+                      <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center mb-2.5">
+                        <Icon size={15} className="text-primary" strokeWidth={2} />
+                      </div>
+                      <p className="font-bold text-foreground text-xs leading-tight">{label}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{sub}</p>
+                      <div className="mt-2.5 flex items-center justify-between">
+                        <p className="font-bold text-primary text-sm">{price}</p>
+                        <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                          <Clock size={8} strokeWidth={2} />{mins}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Care add-ons */}
+              <div className="border-t border-border px-5 pt-3 pb-4 space-y-2">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Care &amp; Coat</p>
+                {ADDONS_FULL.filter((a) => !a.highlight).map(({ icon: Icon, label, sub, price, mins }, i) => (
+                  <div key={label} className={`flex items-center gap-3 py-2 ${i > 0 ? 'border-t border-border' : ''}`}>
+                    <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                      <Icon size={13} className="text-muted-foreground" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-xs">{label}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{sub}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-foreground text-xs">{price}</p>
+                      <p className="text-[9px] text-muted-foreground flex items-center gap-0.5 justify-end">
+                        <Clock size={8} strokeWidth={2} />{mins}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ── Book CTA ── */}
+          <Link
+            href="/book"
+            className="w-full flex items-center justify-between bg-primary text-primary-foreground px-5 py-4 rounded-2xl font-bold text-sm"
+          >
+            <span>Book a Grooming Session</span>
+            <ArrowRight size={16} />
+          </Link>
+
           {/* ── My Pets quick link ── */}
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -89,68 +261,6 @@ export default function HomePage() {
               </div>
             </Link>
           </section>
-
-          {/* ── Services ── */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Grooming Menu</p>
-              <Link href="/book" className="text-primary text-xs font-semibold flex items-center gap-0.5">
-                Book now <ChevronRight size={13} strokeWidth={2.5} />
-              </Link>
-            </div>
-
-            {/* Base service */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden mb-2.5">
-              <div className="px-4 py-3 flex items-center justify-between border-b border-border">
-                <div className="flex items-center gap-2.5">
-                  <Bath size={15} className="text-primary" strokeWidth={2} />
-                  <p className="font-bold text-foreground text-sm">Wash & Tidy</p>
-                  <span className="text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-2 py-0.5 rounded-full">BASE</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground">+VAT</p>
-              </div>
-              <div>
-                {PRICING_ROWS.map(({ label, price }, i) => (
-                  <div key={label} className={`flex items-center justify-between px-4 py-2.5 ${i < PRICING_ROWS.length - 1 ? 'border-b border-border' : ''}`}>
-                    <p className="text-sm font-medium text-foreground">{label}</p>
-                    <p className="font-bold text-foreground text-sm">AED {price}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Add-ons */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-              <div className="px-4 py-3 flex items-center gap-2 border-b border-border">
-                <Plus size={13} className="text-primary" strokeWidth={2.5} />
-                <p className="font-bold text-foreground text-sm">
-                  Add-Ons <span className="font-normal text-muted-foreground text-xs">(select during booking)</span>
-                </p>
-              </div>
-              <div>
-                {ADDONS_PREVIEW.map(({ icon: Icon, label, from }, i) => (
-                  <div key={label} className={`flex items-center gap-3 px-4 py-2.5 ${i < ADDONS_PREVIEW.length - 1 ? 'border-b border-border' : ''}`}>
-                    <Icon size={14} className="text-primary flex-shrink-0" strokeWidth={2} />
-                    <p className="flex-1 text-sm font-medium text-foreground">{label}</p>
-                    <p className="font-bold text-foreground text-sm">from AED {from}</p>
-                  </div>
-                ))}
-                <div className="px-4 py-2.5 border-t border-border">
-                  <p className="text-[11px] text-muted-foreground">+ Nail Grind · Tooth Brushing · Medicated Shampoo · De-matting</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Care add-ons from AED 29 · All prices +VAT (5%)</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Book CTA ── */}
-          <Link
-            href="/book"
-            className="w-full flex items-center justify-between bg-primary text-primary-foreground px-5 py-4 rounded-2xl font-bold text-sm"
-          >
-            <span>Book a Grooming Session</span>
-            <ArrowRight size={16} />
-          </Link>
 
           {/* ── Why Scruffs ── */}
           <section>
@@ -207,6 +317,11 @@ export default function HomePage() {
             >
               @scruffs.ae
             </a>
+          </div>
+
+          {/* ── Full logo footer ── */}
+          <div className="flex flex-col items-center py-4 opacity-40">
+            <Image src="/logo-dark.png" alt="Scruffs" width={100} height={60} className="object-contain dark:invert" />
           </div>
 
         </div>

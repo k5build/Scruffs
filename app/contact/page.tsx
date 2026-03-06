@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, MessageCircle, Phone, Instagram, Mail, Clock, MapPin } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 
@@ -127,6 +128,11 @@ export default function ContactPage() {
               </details>
             ))}
           </div>
+        </div>
+
+        {/* Logo footer */}
+        <div className="flex flex-col items-center py-3 opacity-40">
+          <Image src="/logo-dark.png" alt="Scruffs" width={90} height={54} className="object-contain dark:invert" />
         </div>
 
       </main>

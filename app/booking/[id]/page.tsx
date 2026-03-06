@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight, AlertCircle } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, BASE_SERVICE, ADDONS } from '@/lib/utils';
@@ -30,10 +31,13 @@ export default async function BookingConfirmationPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-3.5 flex items-center justify-between">
-        <span className="font-bold text-foreground text-sm tracking-wider">SCRUFFS</span>
-        <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-3 py-1 rounded-full">Booking Confirmed</span>
-        <div className="w-16" />
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Image src="/logo-icon-green.png" alt="Scruffs" width={30} height={30} className="rounded-lg" />
+          <span className="font-bold text-foreground text-sm tracking-widest">SCRUFFS</span>
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-3 py-1 rounded-full">Confirmed</span>
+        <div className="w-20" />
       </div>
 
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6 space-y-5 pb-10">

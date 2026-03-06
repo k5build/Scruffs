@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Check } from 'lucide-react';
 import { BookingData, BOOKING_STEPS, ServiceKey } from '@/types';
 import PetStep         from './steps/PetStep';
@@ -68,22 +69,24 @@ export default function BookingWizard() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Sticky header */}
       <div className="bg-card border-b border-border sticky top-0 z-30">
-        <div className="flex items-center gap-3 px-4 py-3.5 max-w-lg mx-auto">
+        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
           {step > 1 ? (
             <button
               onClick={back}
-              className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
             >
               <ArrowLeft size={17} strokeWidth={2.5} />
             </button>
           ) : (
             <Link
               href="/"
-              className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
             >
               <ArrowLeft size={17} strokeWidth={2.5} />
             </Link>
           )}
+          {/* Logo */}
+          <Image src="/logo-icon-green.png" alt="Scruffs" width={28} height={28} className="rounded-lg flex-shrink-0" />
           <div className="flex-1">
             <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
               Step {step} of 4
@@ -92,9 +95,8 @@ export default function BookingWizard() {
               {BOOKING_STEPS[step - 1].description}
             </p>
           </div>
-          {/* Price badge if available */}
           {data.price > 0 && (
-            <span className="text-sm font-bold text-primary">AED {data.price}</span>
+            <span className="text-sm font-bold text-primary flex-shrink-0">AED {data.price}</span>
           )}
         </div>
 
