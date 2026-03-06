@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -56,9 +57,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['Montserrat', 'system-ui', 'sans-serif'],
-        body:    ['Nunito', 'system-ui', 'sans-serif'],
-        sans:    ['Nunito', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'system-ui', 'sans-serif'],
+        body:    ['Inter', 'system-ui', 'sans-serif'],
+        sans:    ['Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg:  'var(--radius)',

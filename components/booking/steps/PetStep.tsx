@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react';
 import { Dog, Cat, ChevronRight, Plus, Check } from 'lucide-react';
 import { BookingData, PetType, PetSize, SavedPet } from '@/types';
 import { DOG_BREEDS, CAT_BREEDS, PET_AGE_OPTIONS } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 
 interface Props {
   data: BookingData;
@@ -59,48 +54,41 @@ export default function PetStep({ data, onChange, onNext }: Props) {
   };
 
   return (
-    <div className="animate-fade-in space-y-6 pb-24">
+    <div className="animate-fade-in space-y-5 pb-24">
       <div>
-        <h2 className="font-display font-extrabold text-2xl text-foreground">Who&apos;s getting groomed?</h2>
+        <h2 className="font-bold text-2xl text-foreground">Who&apos;s getting groomed?</h2>
         <p className="text-muted-foreground text-sm mt-1">Select a saved pet or add a new one</p>
       </div>
 
       {/* Saved pets */}
       {savedPets.length > 0 && mode === 'select' && (
         <div className="space-y-2">
-          <Label className="text-muted-foreground">Your Pets</Label>
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Your Pets</p>
           <div className="space-y-2 mt-2">
             {savedPets.map((pet) => (
-              <button
-                key={pet.id}
-                onClick={() => selectSaved(pet)}
-                className="w-full text-left"
-              >
-                <Card className="flex items-center justify-between px-4 py-3.5 border-l-4 border-accent shadow-brand-sm hover:shadow-brand-md transition-shadow cursor-pointer">
+              <button key={pet.id} onClick={() => selectSaved(pet)} className="w-full text-left">
+                <div className="bg-card border border-border rounded-2xl flex items-center justify-between px-4 py-3.5 hover:border-primary/40 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                       {pet.type === 'DOG'
                         ? <Dog size={19} className="text-primary" strokeWidth={2} />
                         : <Cat size={19} className="text-primary" strokeWidth={2} />
                       }
                     </div>
                     <div>
-                      <p className="font-bold text-foreground text-sm">{pet.name}</p>
+                      <p className="font-semibold text-foreground text-sm">{pet.name}</p>
                       <p className="text-xs text-muted-foreground">{pet.breed} · {pet.size ?? 'Cat'} · {pet.age}</p>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-muted-foreground" strokeWidth={2} />
-                </Card>
+                </div>
               </button>
             ))}
-            <button
-              onClick={() => { setMode('new'); onChange({ savedPetId: '' }); }}
-              className="w-full"
-            >
-              <Card className="flex items-center gap-3 px-4 py-3.5 border-dashed border-accent/60 text-accent-foreground hover:bg-accent/5 transition-colors cursor-pointer shadow-none">
+            <button onClick={() => { setMode('new'); onChange({ savedPetId: '' }); }} className="w-full">
+              <div className="bg-card border border-dashed border-primary/40 rounded-2xl flex items-center gap-3 px-4 py-3.5 text-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Plus size={17} strokeWidth={2.5} />
-                <span className="font-bold text-sm">Add a different pet</span>
-              </Card>
+                <span className="font-semibold text-sm">Add a different pet</span>
+              </div>
             </button>
           </div>
         </div>
@@ -112,23 +100,23 @@ export default function PetStep({ data, onChange, onNext }: Props) {
 
           {/* Pet type */}
           <div className="space-y-2">
-            <Label>Pet Type</Label>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Pet Type</p>
             <div className="grid grid-cols-2 gap-3 mt-2">
               {([['DOG', Dog, 'Dog', 'All breeds & sizes'], ['CAT', Cat, 'Cat', 'Short & long hair']] as const).map(
                 ([type, Icon, label, sub]) => (
                   <button
                     key={type}
                     onClick={() => { onChange({ petType: type as PetType, petSize: type === 'CAT' ? null : data.petSize }); setErrors((e) => ({ ...e, petType: '' })); }}
-                    className={`p-5 text-left rounded-2xl border-2 transition-all duration-200 ${
+                    className={`p-5 text-left rounded-2xl border transition-all duration-150 ${
                       data.petType === type
-                        ? 'border-primary bg-primary/5 shadow-brand-sm'
-                        : 'border-border bg-card hover:border-accent'
+                        ? 'border-primary bg-primary/8'
+                        : 'border-border bg-card hover:border-primary/40'
                     }`}
                   >
-                    <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center mb-3">
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                       <Icon size={21} className="text-primary" strokeWidth={2} />
                     </div>
-                    <p className="font-display font-bold text-foreground text-sm">{label}</p>
+                    <p className="font-bold text-foreground text-sm">{label}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
                     {data.petType === type && (
                       <div className="mt-2">
@@ -145,19 +133,19 @@ export default function PetStep({ data, onChange, onNext }: Props) {
           {/* Dog size */}
           {data.petType === 'DOG' && (
             <div className="space-y-2">
-              <Label>Size</Label>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Size</p>
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {SIZES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => { onChange({ petSize: s.id }); setErrors((e) => ({ ...e, petSize: '' })); }}
-                    className={`py-3 px-1 rounded-xl border-2 text-center transition-all duration-200 ${
+                    className={`py-3 px-1 rounded-xl border text-center transition-all duration-150 ${
                       data.petSize === s.id
-                        ? 'border-primary bg-primary text-primary-foreground shadow-brand-sm'
-                        : 'border-border text-foreground hover:border-accent bg-card'
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border text-foreground hover:border-primary/40 bg-card'
                     }`}
                   >
-                    <span className="block text-xs font-extrabold font-display">{s.label}</span>
+                    <span className="block text-xs font-bold">{s.label}</span>
                     <span className="block text-[9px] opacity-70 mt-0.5">{s.range}</span>
                   </button>
                 ))}
@@ -168,27 +156,31 @@ export default function PetStep({ data, onChange, onNext }: Props) {
 
           {/* Pet name */}
           <div className="space-y-2">
-            <Label htmlFor="petName">Pet&apos;s Name</Label>
-            <Input
+            <label htmlFor="petName" className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              Pet&apos;s Name
+            </label>
+            <input
               id="petName"
               type="text"
               value={data.petName}
               onChange={(e) => { onChange({ petName: e.target.value }); setErrors((x) => ({ ...x, petName: '' })); }}
               placeholder="e.g. Barnaby, Luna, Max…"
-              aria-invalid={!!errors.petName}
+              className={`input-field mt-2 ${errors.petName ? 'error' : ''}`}
             />
             {errors.petName && <p className="text-destructive text-xs">{errors.petName}</p>}
           </div>
 
           {/* Breed */}
           <div className="space-y-2">
-            <Label htmlFor="petBreed">Breed</Label>
+            <label htmlFor="petBreed" className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              Breed
+            </label>
             <select
               id="petBreed"
               value={data.petBreed}
               onChange={(e) => { onChange({ petBreed: e.target.value }); setErrors((x) => ({ ...x, petBreed: '' })); }}
               disabled={!data.petType}
-              className={`flex h-11 w-full rounded-xl border bg-card px-4 py-2.5 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50 ${errors.petBreed ? 'border-destructive' : 'border-border'}`}
+              className={`flex h-11 w-full rounded-xl border bg-card px-4 py-2.5 text-sm text-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 mt-2 ${errors.petBreed ? 'border-destructive' : 'border-border'}`}
             >
               <option value="">Select breed…</option>
               {breeds.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -198,16 +190,16 @@ export default function PetStep({ data, onChange, onNext }: Props) {
 
           {/* Age */}
           <div className="space-y-2">
-            <Label>Age</Label>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Age</p>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {PET_AGE_OPTIONS.map((age) => (
                 <button
                   key={age}
                   onClick={() => { onChange({ petAge: age }); setErrors((x) => ({ ...x, petAge: '' })); }}
-                  className={`py-2.5 px-3 rounded-xl border-2 text-left text-xs font-semibold transition-all duration-200 ${
+                  className={`py-2.5 px-3 rounded-xl border text-left text-xs font-semibold transition-all duration-150 ${
                     data.petAge === age
                       ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border text-foreground hover:border-accent bg-card'
+                      : 'border-border text-foreground hover:border-primary/40 bg-card'
                   }`}
                 >
                   {age}
@@ -219,7 +211,7 @@ export default function PetStep({ data, onChange, onNext }: Props) {
 
           {/* Notes */}
           <details className="group">
-            <summary className="cursor-pointer text-xs font-display font-bold text-accent-foreground uppercase tracking-wide list-none flex items-center gap-1.5">
+            <summary className="cursor-pointer text-xs font-bold text-primary uppercase tracking-wide list-none flex items-center gap-1.5">
               <Plus size={13} strokeWidth={3} className="group-open:rotate-45 transition-transform duration-200" />
               Special requirements (optional)
             </summary>
@@ -239,9 +231,12 @@ export default function PetStep({ data, onChange, onNext }: Props) {
       {(mode === 'new' || savedPets.length === 0) && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border z-20">
           <div className="max-w-lg mx-auto">
-            <Button onClick={handleNext} className="w-full h-12 font-display font-bold tracking-wide">
+            <button
+              onClick={handleNext}
+              className="w-full bg-primary text-primary-foreground h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            >
               Continue to Service
-            </Button>
+            </button>
           </div>
         </div>
       )}

@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { Dog, Cat, Plus, Trash2, ArrowLeft, PawPrint } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import { SavedPet } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 export default function MyPetsPage() {
   const [pets, setPets] = useState<SavedPet[]>([]);
@@ -27,44 +24,41 @@ export default function MyPetsPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="bg-primary px-4 py-3.5 flex items-center gap-3">
-        <Link href="/" className="p-1.5 rounded-xl text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10 transition-colors">
-          <ArrowLeft size={20} strokeWidth={2.5} />
+      <div className="bg-card border-b border-border px-4 py-3.5 flex items-center gap-3 sticky top-0 z-30">
+        <Link href="/" className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft size={17} strokeWidth={2.5} />
         </Link>
-        <div>
-          <p className="text-primary-foreground/50 text-[10px] font-display font-bold uppercase tracking-widest">Scruffs</p>
-          <p className="text-primary-foreground font-display font-bold text-sm">My Pets</p>
-        </div>
+        <p className="font-bold text-foreground text-base">My Pets</p>
       </div>
 
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-5 pb-28 space-y-3">
 
         {pets.length === 0 ? (
-          <Card className="p-10 text-center shadow-brand-sm border-dashed">
-            <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
+          <div className="bg-card border border-dashed border-border rounded-2xl p-10 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <PawPrint size={28} className="text-primary/60" strokeWidth={1.5} />
             </div>
-            <p className="font-display font-bold text-foreground text-base">No pets saved yet</p>
+            <p className="font-bold text-foreground text-base">No pets saved yet</p>
             <p className="text-xs text-muted-foreground mt-1 mb-6">
               Your pets are saved automatically after your first booking
             </p>
-            <Button asChild size="sm" className="font-display font-bold">
-              <Link href="/book">
-                <Plus size={15} strokeWidth={2.5} />
-                Book a Grooming
-              </Link>
-            </Button>
-          </Card>
+            <Link
+              href="/book"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              Book a Grooming
+            </Link>
+          </div>
         ) : (
           <>
-            <p className="text-xs font-display font-bold text-muted-foreground uppercase tracking-wide px-0.5">
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-0.5">
               {pets.length} {pets.length === 1 ? 'pet' : 'pets'} saved
             </p>
 
             {pets.map((pet) => (
-              <Card key={pet.id} className="flex items-center gap-3 px-4 py-4 shadow-brand-sm">
-                <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center flex-shrink-0">
+              <div key={pet.id} className="bg-card border border-border rounded-2xl flex items-center gap-3 px-4 py-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {pet.type === 'DOG'
                     ? <Dog size={22} className="text-primary" strokeWidth={2} />
                     : <Cat size={22} className="text-primary" strokeWidth={2} />
@@ -72,37 +66,36 @@ export default function MyPetsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-display font-bold text-foreground text-sm">{pet.name}</p>
-                    <Badge variant="teal" className="text-[9px]">{pet.type === 'DOG' ? (pet.size ?? 'DOG') : 'CAT'}</Badge>
+                    <p className="font-bold text-foreground text-sm">{pet.name}</p>
+                    <span className="text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-2 py-0.5 rounded-full">
+                      {pet.type === 'DOG' ? (pet.size ?? 'DOG') : 'CAT'}
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {pet.breed} · {pet.age}
-                  </p>
-                  {pet.notes && (
-                    <p className="text-[11px] text-muted-foreground mt-1 italic truncate">{pet.notes}</p>
-                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">{pet.breed} · {pet.age}</p>
+                  {pet.notes && <p className="text-[11px] text-muted-foreground mt-1 italic truncate">{pet.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Button asChild size="sm" variant="teal" className="text-[11px] h-8 px-3 font-bold">
-                    <Link href="/book">Book</Link>
-                  </Button>
-                  <Button
+                  <Link
+                    href="/book"
+                    className="text-[11px] h-8 px-3 bg-primary/10 text-primary rounded-xl font-bold flex items-center hover:bg-primary/20 transition-colors"
+                  >
+                    Book
+                  </Link>
+                  <button
                     onClick={() => removePet(pet.id)}
-                    size="icon-sm"
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    className="w-8 h-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center"
                   >
                     <Trash2 size={15} strokeWidth={2} />
-                  </Button>
+                  </button>
                 </div>
-              </Card>
+              </div>
             ))}
 
             <Link href="/book">
-              <Card className="flex items-center gap-3 px-4 py-3.5 border-dashed border-accent/60 text-accent-foreground hover:bg-accent/5 transition-colors cursor-pointer shadow-none">
+              <div className="bg-card border border-dashed border-primary/40 rounded-2xl flex items-center gap-3 px-4 py-3.5 text-primary hover:bg-primary/5 transition-colors cursor-pointer">
                 <Plus size={17} strokeWidth={2.5} />
-                <span className="font-bold text-sm">Add a new pet</span>
-              </Card>
+                <span className="font-semibold text-sm">Add a new pet</span>
+              </div>
             </Link>
           </>
         )}
