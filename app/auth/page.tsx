@@ -25,15 +25,10 @@ function AuthForm() {
     const cleaned = phone.trim();
     if (!cleaned) { setError('Enter your phone number'); return; }
 
-    // Basic UAE validation — accept 05xxxxxxxx, 9715xxxxxxxx, 5xxxxxxxx
+    // Accept any number with at least 7 digits
     const digits = cleaned.replace(/\D/g, '');
-    const valid  =
-      (digits.startsWith('05')  && digits.length === 10) ||
-      (digits.startsWith('5')   && digits.length === 9)  ||
-      (digits.startsWith('971') && digits.length >= 12)  ||
-      (digits.startsWith('+971'));
-    if (!valid) {
-      setError('Enter a valid UAE number — e.g. 050 123 4567 or +971 50 123 4567');
+    if (digits.length < 7) {
+      setError('Enter a valid phone number');
       return;
     }
 
@@ -132,13 +127,13 @@ function AuthForm() {
                 type="tel"
                 value={phone}
                 onChange={(e) => { setPhone(e.target.value); setError(''); }}
-                placeholder="050 123 4567 or +971 50 123 4567"
+                placeholder="+971 50 123 4567 or +44 7911 123456"
                 className="input-field"
                 autoComplete="tel"
                 inputMode="tel"
               />
               <p className="text-[11px] text-muted-foreground mt-1.5">
-                Accepts: 05xxxxxxxx · 9715xxxxxxxx · +971 5x xxx xxxx
+                UAE: 050 xxx xxxx · International: +country code + number
               </p>
             </div>
 

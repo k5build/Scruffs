@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Star, Gift, TrendingUp, Clock, ChevronRight, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Star, Gift, TrendingUp, Clock, ChevronRight, RotateCcw, X, Wallet } from 'lucide-react';
 import { loyaltyProgress, LOYALTY_TIERS } from '@/lib/utils';
 import BottomNav from '@/components/BottomNav';
 
@@ -22,6 +22,164 @@ interface LoyaltyData {
     note:      string | null;
     createdAt: string;
   }>;
+}
+
+/* ── Wallet buttons ── */
+function WalletButtons() {
+  const [appleLoading,  setAppleLoading]  = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [modal, setModal] = useState<'apple' | 'google' | null>(null);
+
+  const addApple = async () => {
+    setAppleLoading(true);
+    try {
+      const res = await fetch('/api/wallet/apple');
+      if (res.status === 501) { setModal('apple'); return; }
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'scruffs-loyalty.pkpass';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { setModal('apple'); }
+    finally  { setAppleLoading(false); }
+  };
+
+  const addGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      const res = await fetch('/api/wallet/google', { redirect: 'manual' });
+      if (res.status === 501 || res.status === 500) { setModal('google'); return; }
+      // Follow the redirect to Google Wallet save page
+      window.location.href = '/api/wallet/google';
+    } catch { setModal('google'); }
+    finally  { setGoogleLoading(false); }
+  };
+
+  return (
+    <>
+      {/* Wallet buttons */}
+      <div className="space-y-2.5">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Save to Wallet</p>
+
+        {/* Apple Wallet */}
+        <button
+          onClick={addApple}
+          disabled={appleLoading}
+          className="w-full flex items-center gap-3 bg-black text-white rounded-2xl px-4 py-3.5 hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          <div className="flex-1 text-left">
+            <p className="text-[10px] font-semibold opacity-60 leading-none mb-0.5">Add to</p>
+            <p className="font-bold text-sm leading-none">Apple Wallet</p>
+          </div>
+          {appleLoading && <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+        </button>
+
+        {/* Google Wallet */}
+        <button
+          onClick={addGoogle}
+          disabled={googleLoading}
+          className="w-full flex items-center gap-3 bg-white border-2 border-[#4285F4] rounded-2xl px-4 py-3.5 hover:bg-blue-50 transition-colors disabled:opacity-50"
+        >
+          <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <div className="flex-1 text-left">
+            <p className="text-[10px] font-semibold text-[#4285F4]/60 leading-none mb-0.5">Add to</p>
+            <p className="font-bold text-sm text-[#4285F4] leading-none">Google Wallet</p>
+          </div>
+          {googleLoading && <div className="w-4 h-4 rounded-full border-2 border-blue-200 border-t-[#4285F4] animate-spin" />}
+        </button>
+      </div>
+
+      {/* Setup modal — Apple */}
+      {modal === 'apple' && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-lg p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center">
+                  <Wallet size={18} className="text-white" />
+                </div>
+                <p className="font-bold text-foreground text-base">Apple Wallet Setup</p>
+              </div>
+              <button onClick={() => setModal(null)}><X size={20} className="text-muted-foreground" /></button>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              To enable Apple Wallet passes, you need an Apple Developer account. Here&apos;s the one-time setup:
+            </p>
+            <ol className="space-y-3">
+              {[
+                { step: '1', text: 'Sign up at developer.apple.com ($99/year)' },
+                { step: '2', text: 'Go to Certificates, IDs & Profiles → Identifiers → + → Pass Type IDs' },
+                { step: '3', text: 'Create ID: pass.ae.scruffs.loyalty' },
+                { step: '4', text: 'Create a Pass Type ID Certificate → download .cer → export as PEM' },
+                { step: '5', text: 'Add to Vercel: APPLE_PASS_CERT_PEM, APPLE_PASS_KEY_PEM, APPLE_PASS_TYPE_ID, APPLE_TEAM_ID' },
+              ].map(({ step, text }) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{step}</span>
+                  <p className="text-sm text-foreground">{text}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-muted-foreground bg-secondary rounded-xl p-3">
+              Once configured, customers tap the button and the loyalty card downloads directly to their iPhone Wallet — no app needed.
+            </p>
+            <button onClick={() => setModal(null)} className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-bold text-sm">
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Setup modal — Google */}
+      {modal === 'google' && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-lg p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#4285F4] flex items-center justify-center">
+                  <Wallet size={18} className="text-white" />
+                </div>
+                <p className="font-bold text-foreground text-base">Google Wallet Setup</p>
+              </div>
+              <button onClick={() => setModal(null)}><X size={20} className="text-muted-foreground" /></button>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              To enable Google Wallet passes (free):
+            </p>
+            <ol className="space-y-3">
+              {[
+                { step: '1', text: 'Go to pay.google.com/business/console → Request API access' },
+                { step: '2', text: 'Create a Google Cloud project → Enable "Google Wallet API"' },
+                { step: '3', text: 'Create a Service Account → generate a JSON key' },
+                { step: '4', text: 'Add to Vercel: GOOGLE_WALLET_ISSUER_ID, GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL, GOOGLE_WALLET_PRIVATE_KEY' },
+              ].map(({ step, text }) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-[#4285F4] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{step}</span>
+                  <p className="text-sm text-foreground">{text}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-muted-foreground bg-secondary rounded-xl p-3">
+              Works on all Android phones. The card appears in Google Wallet and updates automatically when points change.
+            </p>
+            <button onClick={() => setModal(null)} className="w-full bg-[#4285F4] text-white py-3 rounded-xl font-bold text-sm">
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -308,6 +466,9 @@ export default function LoyaltyPage() {
 
           {/* ── THE PHYSICAL CARD ── */}
           <LoyaltyFlipCard data={data} />
+
+          {/* ── ADD TO WALLET ── */}
+          <WalletButtons />
 
           {/* ── STAMP PROGRESS CARD ── */}
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
