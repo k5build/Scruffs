@@ -320,3 +320,31 @@ export const PET_AGE_OPTIONS = [
   '5–8 years',
   '8+ years (Senior)',
 ];
+
+/* ─────────────────────────────────────────
+   LOYALTY
+───────────────────────────────────────── */
+export const LOYALTY_TIERS = {
+  BRONZE: { label: 'Bronze',  min: 0,    next: 500,  color: '#CD7F32', benefit: 'Earn 1pt per AED spent' },
+  SILVER: { label: 'Silver',  min: 500,  next: 1500, color: '#9E9E9E', benefit: '5% off every booking' },
+  GOLD:   { label: 'Gold',    min: 1500, next: null,  color: '#FFD700', benefit: '10% off + priority slots' },
+} as const;
+
+export function recalcTier(points: number): 'BRONZE' | 'SILVER' | 'GOLD' {
+  if (points >= 1500) return 'GOLD';
+  if (points >= 500)  return 'SILVER';
+  return 'BRONZE';
+}
+
+export function loyaltyProgress(points: number) {
+  const tier = recalcTier(points);
+  const def  = LOYALTY_TIERS[tier];
+  if (!def.next) return { tier, pct: 100, pointsToNext: 0, nextTier: null };
+  const pct = Math.round(((points - def.min) / (def.next - def.min)) * 100);
+  return { tier, pct, pointsToNext: def.next - points, nextTier: tier === 'BRONZE' ? 'SILVER' : 'GOLD' };
+}
+
+/** Points earned for a booking = 1 pt per AED (rounded) */
+export function calcLoyaltyPoints(priceAed: number): number {
+  return Math.round(priceAed);
+}

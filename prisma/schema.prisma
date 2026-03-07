@@ -18,11 +18,17 @@ model User {
   appleId   String?   @unique          // Apple OAuth sub
   name      String?
   email     String?
+
+  // Loyalty
+  loyaltyPoints Int    @default(0)
+  loyaltyTier   String @default("BRONZE") // BRONZE | SILVER | GOLD
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  pets      Pet[]
-  bookings  Booking[]
+  pets                 Pet[]
+  bookings             Booking[]
+  loyaltyTransactions  LoyaltyTransaction[]
 }
 
 // ── OTP codes (phone login) ───────────────────────────────────
@@ -105,6 +111,9 @@ model Booking {
   paymentStatus   String   @default("UNPAID")  // UNPAID | PAID | REFUNDED
   stripePaymentId String?                       // Stripe PaymentIntent ID
 
+  // Loyalty points awarded for this booking
+  loyaltyPointsEarned Int @default(0)
+
   // Admin notes
   adminNotes String?
 
@@ -123,4 +132,37 @@ model TimeSlot {
   createdAt   DateTime  @default(now())
 
   @@unique([date, startTime])
+}
+
+// ── Loyalty transactions ───────────────────────────────────────
+model LoyaltyTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  points    Int      // positive = earned, negative = redeemed/deducted
+  reason    String   // BOOKING_EARN | SIGNUP_BONUS | ADMIN_AWARD | ADMIN_DEDUCT | REDEMPTION
+  note      String?  // human-readable label
+  bookingId String?  // linked booking if reason = BOOKING_EARN
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ── Promotions / ads ──────────────────────────────────────────
+model Promotion {
+  id        String    @id @default(cuid())
+  title     String
+  subtitle  String?
+  ctaText   String    @default("Book Now")
+  ctaUrl    String    @default("/book")
+  bgColor   String    @default("#3A4F4A")
+  textColor String    @default("#DBD4C7")
+  active    Boolean   @default(true)
+  priority  Int       @default(0)   // higher = shown first
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

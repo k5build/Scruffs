@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight, AlertCircle } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight, AlertCircle, Star } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, BASE_SERVICE, ADDONS } from '@/lib/utils';
 import PaymentSection from '@/components/booking/PaymentSection';
@@ -67,6 +67,21 @@ export default async function BookingConfirmationPage({ params }: Props) {
           </div>
         </div>
 
+        {/* Loyalty points earned */}
+        {booking.loyaltyPointsEarned > 0 && (
+          <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl px-4 py-3.5 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+              <Star size={16} className="text-amber-600 fill-amber-500" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="font-bold text-foreground text-sm">+{booking.loyaltyPointsEarned} Loyalty Points Earned!</p>
+              <Link href="/loyalty" className="text-xs text-amber-600 font-semibold hover:underline">
+                View your rewards card →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Time window notice */}
         <div className="bg-primary/8 border border-primary/20 rounded-2xl px-4 py-3.5 flex items-start gap-3">
           <AlertCircle size={15} className="text-primary flex-shrink-0 mt-0.5" strokeWidth={2} />
@@ -96,11 +111,18 @@ export default async function BookingConfirmationPage({ params }: Props) {
 
           <div className="bg-secondary/40 px-5 py-3 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Total +VAT · pay on day</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Total +VAT</span>
               <span className="font-bold text-foreground text-lg">{formatPrice(booking.price)}</span>
             </div>
           </div>
         </div>
+
+        {/* Payment — prominent, right after summary */}
+        <PaymentSection
+          bookingId={booking.id}
+          amount={booking.price}
+          paymentStatus={booking.paymentStatus}
+        />
 
         {/* What's next */}
         <div className="bg-card border border-border rounded-2xl p-5">
@@ -110,7 +132,7 @@ export default async function BookingConfirmationPage({ params }: Props) {
               'Booking confirmed — no deposit needed',
               'Groomer will WhatsApp you 30 min before arrival',
               'Mobile salon van arrives at your door',
-              'Pay cash or card on the day',
+              'Pay online above, or cash/card on the day',
             ].map((text, i) => (
               <li key={i} className="flex items-start gap-2.5">
                 <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -121,13 +143,6 @@ export default async function BookingConfirmationPage({ params }: Props) {
             ))}
           </ul>
         </div>
-
-        {/* Payment */}
-        <PaymentSection
-          bookingId={booking.id}
-          amount={booking.price}
-          paymentStatus={booking.paymentStatus}
-        />
 
         {/* Actions */}
         <div className="space-y-3">

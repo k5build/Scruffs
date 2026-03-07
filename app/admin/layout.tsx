@@ -35,7 +35,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   Appointments
                 </Link>
                 <Link href="/admin/slots" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                  Manage Slots
+                  Slots
+                </Link>
+                <Link href="/admin/loyalty" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                  Loyalty
+                </Link>
+                <Link href="/admin/promotions" className="text-yellow-600 hover:text-yellow-800 font-bold transition-colors">
+                  Promotions
                 </Link>
               </nav>
             </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { generateBookingRef, calcAddonsPrice, getBasePrice, calcTotalDuration } from '@/lib/utils';
+import { generateBookingRef, calcAddonsPrice, getBasePrice, calcTotalDuration, calcLoyaltyPoints, recalcTier } from '@/lib/utils';
 import { verifyToken, SESSION_COOKIE } from '@/lib/auth';
 import { sendAllNotifications } from '@/lib/notifications';
 
@@ -117,6 +117,23 @@ export async function POST(request: NextRequest) {
           }
         } catch { /* ignore pet save failure */ }
       }
+    }
+
+    // Award loyalty points if user is logged in
+    if (userId) {
+      try {
+        const pts = calcLoyaltyPoints(totalPrice);
+        const user = await prisma.user.update({
+          where: { id: userId },
+          data:  { loyaltyPoints: { increment: pts } },
+        });
+        const newTier = recalcTier(user.loyaltyPoints);
+        await prisma.user.update({ where: { id: userId }, data: { loyaltyTier: newTier } });
+        await prisma.loyaltyTransaction.create({
+          data: { userId, points: pts, reason: 'BOOKING_EARN', note: `Booking ${bookingRef}`, bookingId: booking.id },
+        });
+        await prisma.booking.update({ where: { id: booking.id }, data: { loyaltyPointsEarned: pts } });
+      } catch { /* loyalty failure must not block booking */ }
     }
 
     // Send all notifications (email + WhatsApp) — non-blocking

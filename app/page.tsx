@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Suspense } from 'react';
-import { Bath, Scissors, Sparkles, Star, ArrowRight, ChevronRight, Clock, Shield, MapPin, PawPrint, Check, Droplets, Wind, Ear, Flower2 } from 'lucide-react';
+import { Bath, Scissors, Sparkles, Star, ArrowRight, ChevronRight, Clock, Shield, MapPin, PawPrint, Droplets, Wind, Ear, Flower2, Check } from 'lucide-react';
 import TopBar from '@/components/TopBar';
 import BottomNav from '@/components/BottomNav';
 import WelcomeModal from '@/components/WelcomeModal';
+import PromotionsBanner from '@/components/PromotionsBanner';
 
 /* ─── Service includes (matches BASE_SERVICE in utils) ─── */
 const SERVICE_INCLUDES = [
@@ -52,30 +53,37 @@ export default function HomePage() {
       <main className="flex-1 overflow-y-auto pb-28">
         <div className="max-w-lg mx-auto px-4 pt-5 space-y-6">
 
-          {/* ── Hero card ── */}
-          <div className="promo-card p-5 relative overflow-hidden">
-            {/* Decorative logo watermark */}
-            <div className="absolute right-0 bottom-0 opacity-[0.06] pointer-events-none">
-              <Image src="/logo-dark.png" alt="" width={160} height={100} className="object-contain" />
+          {/* ── BOOK APPOINTMENT HERO ── */}
+          <div className="bg-primary rounded-3xl p-6 relative overflow-hidden">
+            <div className="absolute right-[-20px] bottom-[-20px] opacity-[0.07] pointer-events-none">
+              <Image src="/logo-dark.png" alt="" width={180} height={120} className="object-contain" />
             </div>
             <div className="relative z-10">
-              <span className="inline-block bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3 border border-primary/20">
-                Est. 2022 · Dubai
+              <span className="inline-block bg-primary-foreground/15 text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">
+                Dubai&apos;s Mobile Pet Groomer
               </span>
-              <h2 className="font-bold text-[22px] text-foreground leading-tight mb-2">
-                Pamper Your Pet<br/>at Your Doorstep
+              <h2 className="font-black text-[28px] text-primary-foreground leading-tight mb-1.5">
+                Your Pet Deserves<br/>a Spa Day
               </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-[220px]">
-                Professional mobile grooming across all Dubai areas.
+              <p className="text-primary-foreground/70 text-sm leading-relaxed mb-5">
+                We drive to your door — no hassle, no cage stress.
               </p>
               <Link
                 href="/book"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                className="w-full flex items-center justify-center gap-2.5 bg-primary-foreground text-primary py-4 rounded-2xl font-black text-[16px] shadow-lg hover:opacity-90 transition-opacity"
               >
-                Book Now <ArrowRight size={14} />
+                Book Appointment <ArrowRight size={18} strokeWidth={2.5} />
               </Link>
+              <p className="text-primary-foreground/50 text-[11px] text-center mt-2.5 font-medium">
+                Same-day slots available · No deposit needed
+              </p>
             </div>
           </div>
+
+          {/* ── Promotions banner (DB-driven) ── */}
+          <Suspense fallback={null}>
+            <PromotionsBanner />
+          </Suspense>
 
           {/* ── Stats strip ── */}
           <div className="grid grid-cols-3 gap-2.5">
@@ -234,13 +242,25 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* ── Book CTA ── */}
+          {/* ── Mid-page Book CTA ── */}
           <Link
             href="/book"
-            className="w-full flex items-center justify-between bg-primary text-primary-foreground px-5 py-4 rounded-2xl font-bold text-sm"
+            className="w-full flex items-center justify-between bg-primary text-primary-foreground px-5 py-4 rounded-2xl font-black text-base hover:opacity-90 transition-opacity"
           >
-            <span>Book a Grooming Session</span>
-            <ArrowRight size={16} />
+            <span>Book Appointment Now</span>
+            <ArrowRight size={18} strokeWidth={2.5} />
+          </Link>
+
+          {/* ── Loyalty teaser ── */}
+          <Link href="/loyalty" className="w-full flex items-center gap-3 bg-gradient-to-r from-[#3A4F4A] to-[#2d3d39] text-primary-foreground px-5 py-4 rounded-2xl hover:opacity-90 transition-opacity">
+            <div className="w-9 h-9 rounded-xl bg-primary-foreground/15 flex items-center justify-center flex-shrink-0">
+              <Star size={17} className="text-amber-300 fill-amber-300" strokeWidth={1.5} />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm">Scruffs Rewards</p>
+              <p className="text-xs text-primary-foreground/60">Earn 1 pt per AED · Bronze → Silver → Gold</p>
+            </div>
+            <ChevronRight size={16} className="text-primary-foreground/40" strokeWidth={2} />
           </Link>
 
           {/* ── My Pets quick link ── */}
