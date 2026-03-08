@@ -1,39 +1,80 @@
 {
   "name": "Scruffs – Mobile Pet Grooming Dubai",
   "short_name": "Scruffs",
-  "description": "Dubai's premium mobile pet grooming service. Book in under 2 minutes.",
-  "start_url": "/",
+  "description": "Dubai's premium mobile pet grooming service. Professional certified groomers come to your door. Book in under 2 minutes.",
+  "start_url": "/?source=pwa",
   "scope": "/",
+  "id": "ae.scruffs.app",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#F4F2EE",
   "theme_color": "#3A4F4A",
   "orientation": "portrait-primary",
   "lang": "en",
+  "dir": "ltr",
   "categories": ["lifestyle", "health", "shopping"],
+  "prefer_related_applications": false,
   "icons": [
+    { "src": "/icons/icon-72.png",   "sizes": "72x72",   "type": "image/png" },
+    { "src": "/icons/icon-96.png",   "sizes": "96x96",   "type": "image/png" },
+    { "src": "/icons/icon-128.png",  "sizes": "128x128", "type": "image/png" },
+    { "src": "/icons/icon-144.png",  "sizes": "144x144", "type": "image/png" },
+    { "src": "/icons/icon-152.png",  "sizes": "152x152", "type": "image/png" },
+    { "src": "/icons/icon-192.png",  "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-384.png",  "sizes": "384x384", "type": "image/png" },
+    { "src": "/icons/icon-512.png",  "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
     {
-      "src": "/logo-icon-green.png",
-      "sizes": "192x192",
+      "src": "/screenshots/home.png",
+      "sizes": "390x844",
       "type": "image/png",
-      "purpose": "any maskable"
+      "form_factor": "narrow",
+      "label": "Home — Book grooming at your door"
     },
     {
-      "src": "/logo-icon-green.png",
-      "sizes": "512x512",
+      "src": "/screenshots/booking.png",
+      "sizes": "390x844",
       "type": "image/png",
-      "purpose": "any maskable"
+      "form_factor": "narrow",
+      "label": "Easy booking in under 2 minutes"
+    },
+    {
+      "src": "/screenshots/loyalty.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Earn rewards with every booking"
     }
   ],
   "shortcuts": [
     {
-      "name": "Book a Grooming",
-      "url": "/book",
-      "description": "Book a new grooming session"
+      "name": "Book Grooming",
+      "short_name": "Book",
+      "description": "Book a new grooming session",
+      "url": "/book?source=shortcut",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "My Bookings",
-      "url": "/my-bookings",
-      "description": "View your appointments"
+      "short_name": "Bookings",
+      "description": "View your upcoming appointments",
+      "url": "/my-bookings?source=shortcut",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "My Rewards",
+      "short_name": "Rewards",
+      "description": "View your loyalty points",
+      "url": "/loyalty?source=shortcut",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": { "text": "text", "url": "url" }
+  }
 }

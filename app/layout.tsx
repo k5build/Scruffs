@@ -47,6 +47,47 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/logo-icon-green.png" />
+
+        {/* PWA / iOS complete meta tags */}
+        <meta name="apple-mobile-web-app-title" content="Scruffs" />
+        <meta name="application-name" content="Scruffs" />
+        <meta name="msapplication-TileColor" content="#3A4F4A" />
+        <meta name="msapplication-TileImage" content="/icons/icon-144.png" />
+        <meta name="format-detection" content="telephone=yes, email=no" />
+
+        {/* iOS icon sizes */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple/icon-60@3x.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple/icon-83.5@2x.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple/icon-76@2x.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple/icon-60@2x.png" />
+
+        {/* iOS splash screens — iPhone (portrait) */}
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
+          href="/splashscreens/iphone14-pro-max.png" />
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)"
+          href="/splashscreens/iphone14-pro.png" />
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)"
+          href="/splashscreens/iphone14.png" />
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)"
+          href="/splashscreens/iphonex.png" />
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)"
+          href="/splashscreens/iphonexr.png" />
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)"
+          href="/splashscreens/iphone8plus.png" />
+        <link rel="apple-touch-startup-image"
+          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+          href="/splashscreens/iphone8.png" />
+
+        {/* Favicon variants */}
+        <link rel="icon" type="image/png" sizes="32x32"  href="/icons/icon-96.png" />
+        <link rel="icon" type="image/png" sizes="16x16"  href="/icons/icon-72.png" />
+
         {/* Apply theme before first paint to prevent flash — defaults to light */}
         <script dangerouslySetInnerHTML={{
           __html: `(function(){var t=localStorage.getItem('scruffs_theme');if(t==='dark')document.documentElement.classList.add('dark');})();`
