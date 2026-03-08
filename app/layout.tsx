@@ -31,8 +31,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)',  color: '#181A1B' },
-    { media: '(prefers-color-scheme: light)', color: '#F5F7F7' },
+    { media: '(prefers-color-scheme: dark)',  color: '#181B1C' },
+    { media: '(prefers-color-scheme: light)', color: '#F4F2EE' },
   ],
   viewportFit: 'cover',
 };
@@ -47,9 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/logo-icon-green.png" />
-        {/* Apply dark mode before first paint to prevent flash */}
+        {/* Apply theme before first paint to prevent flash — defaults to light */}
         <script dangerouslySetInnerHTML={{
-          __html: `(function(){var t=localStorage.getItem('scruffs_theme');if(t!=='light')document.documentElement.classList.add('dark');})();`
+          __html: `(function(){var t=localStorage.getItem('scruffs_theme');if(t==='dark')document.documentElement.classList.add('dark');})();`
         }} />
         {/* Register service worker */}
         <script dangerouslySetInnerHTML={{

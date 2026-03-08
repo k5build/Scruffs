@@ -1,60 +1,101 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Design System (light default / dark via .dark class) ── */
+/* ═══════════════════════════════════════════════════════════════
+   SCRUFFS DESIGN SYSTEM
+   Brand palette:
+     Deep Forest  #3A4F4A  → light-mode primary / dark decorative
+     Warm Cream   #F4F2EE  → light-mode background
+     Muted Teal   #A3C0BE  → accent / dark-mode primary
+     Warm Beige   #DBD4C7  → surfaces / borders
+   ═══════════════════════════════════════════════════════════════ */
+
 @layer base {
+  /* ── LIGHT MODE ────────────────────────────────────────────── */
   :root {
-    /* Light mode */
-    --background:           180 8% 97%;   /* #F5F7F7 */
-    --foreground:           210 8% 11%;   /* #1A1C1E */
-    --card:                 0 0% 100%;
-    --card-foreground:      210 8% 11%;
-    --popover:              0 0% 100%;
-    --popover-foreground:   210 8% 11%;
-    --primary:              162 28% 48%;  /* #5A9E8F sage green */
-    --primary-foreground:   0 0% 100%;
-    --secondary:            180 8% 93%;   /* light surface */
-    --secondary-foreground: 210 8% 11%;
-    --muted:                180 6% 92%;
-    --muted-foreground:     220 8% 46%;   /* #6B7280 */
-    --accent:               162 28% 48%;  /* #5A9E8F */
-    --accent-foreground:    0 0% 100%;
+    /* Page surfaces */
+    --background:           40 21% 95%;    /* #F4F2EE — brand warm cream  */
+    --foreground:           166 14% 13%;   /* #1C2421 — deep forest near-black */
+
+    /* Card / popover */
+    --card:                 40 30% 98%;    /* #FDFCF9 — warm white        */
+    --card-foreground:      166 14% 13%;
+
+    --popover:              40 30% 98%;
+    --popover-foreground:   166 14% 13%;
+
+    /* Primary — brand deep forest green #3A4F4A */
+    --primary:              166 15% 27%;
+    --primary-foreground:   40 21% 95%;    /* warm cream on green         */
+
+    /* Secondary — warm beige surface */
+    --secondary:            37 18% 89%;    /* #E8E2D9                     */
+    --secondary-foreground: 166 14% 13%;
+
+    /* Muted */
+    --muted:                37 14% 91%;    /* #EDEAE4                     */
+    --muted-foreground:     35 8% 43%;     /* #726E69 — warm gray         */
+
+    /* Accent — brand muted teal #A3C0BE */
+    --accent:               176 19% 70%;
+    --accent-foreground:    166 14% 13%;   /* dark text on teal           */
+
+    /* Destructive */
     --destructive:          0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border:               210 6% 88%;   /* #E2E5E6 */
-    --input:                210 6% 88%;
-    --ring:                 162 28% 48%;
+
+    /* Borders & inputs */
+    --border:               37 16% 84%;    /* #DDD7CC — warm beige border */
+    --input:                37 16% 84%;
+    --ring:                 166 15% 27%;   /* matches primary             */
+
     --radius: 0.75rem;
   }
 
+  /* ── DARK MODE ─────────────────────────────────────────────── */
   .dark {
-    /* Dark mode — exact reference from design spec */
-    --background:           210 6% 10%;   /* #181A1B */
-    --foreground:           0 0% 95%;     /* #F2F2F2 */
-    --card:                 210 6% 15%;   /* #24272A */
-    --card-foreground:      0 0% 95%;
-    --popover:              210 6% 15%;
-    --popover-foreground:   0 0% 95%;
-    --primary:              162 26% 62%;  /* #84B8A9 premium sage */
-    --primary-foreground:   210 6% 10%;   /* dark bg */
-    --secondary:            210 5% 20%;   /* #313538 */
-    --secondary-foreground: 0 0% 95%;
-    --muted:                210 5% 18%;
-    --muted-foreground:     210 5% 63%;   /* #9BA1A6 */
-    --accent:               162 26% 62%;  /* #84B8A9 */
-    --accent-foreground:    210 6% 10%;
+    /* Page surfaces */
+    --background:           210 7% 10%;    /* #181B1C                     */
+    --foreground:           40 14% 92%;    /* #EDE9E2 — warm off-white    */
+
+    /* Card / popover */
+    --card:                 210 6% 14%;    /* #212528                     */
+    --card-foreground:      40 14% 92%;
+
+    --popover:              210 6% 14%;
+    --popover-foreground:   40 14% 92%;
+
+    /* Primary — lighter teal-green so it reads on dark bg */
+    --primary:              166 22% 58%;   /* #6EA89A                     */
+    --primary-foreground:   210 7% 10%;    /* dark bg                     */
+
+    /* Secondary */
+    --secondary:            210 5% 20%;    /* #2F3336                     */
+    --secondary-foreground: 40 14% 92%;
+
+    /* Muted */
+    --muted:                210 5% 17%;    /* #282C2E                     */
+    --muted-foreground:     210 5% 60%;    /* #979EA3                     */
+
+    /* Accent */
+    --accent:               166 22% 58%;   /* same as primary             */
+    --accent-foreground:    210 7% 10%;
+
+    /* Destructive */
     --destructive:          0 62% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border:               210 5% 20%;   /* #313538 */
+
+    /* Borders & inputs */
+    --border:               210 5% 20%;
     --input:                210 5% 20%;
-    --ring:                 162 26% 62%;
+    --ring:                 166 22% 58%;
   }
 }
 
-/* ── Reset ── */
+/* ── Reset ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
@@ -67,25 +108,31 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Scrollbar ── */
+/* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: hsl(var(--background)); }
-::-webkit-scrollbar-thumb { background: hsl(var(--accent)); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Typography — Inter throughout ── */
+/* ── Typography ──────────────────────────────────────────────── */
 .font-display { font-family: 'Inter', system-ui, sans-serif; }
 .font-body    { font-family: 'Inter', system-ui, sans-serif; }
 h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight: 700; }
 
-/* ── Bottom nav — no shadow, 1px border ── */
+/* ── Bottom nav ──────────────────────────────────────────────── */
 .bottom-nav {
   background: hsl(var(--card));
   border-top: 1px solid hsl(var(--border));
 }
 
-/* ── Date pill — 1px border, no shadow ── */
+/* Light mode — very subtle warmth under the nav */
+:root .bottom-nav {
+  background: hsl(var(--card));
+  box-shadow: 0 -1px 0 hsl(var(--border));
+}
+
+/* ── Date pill ───────────────────────────────────────────────── */
 .date-pill {
   display: flex;
   flex-direction: column;
@@ -99,14 +146,14 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
-.date-pill:hover { border-color: hsl(var(--accent)); background: hsl(var(--accent) / 0.08); }
+.date-pill:hover  { border-color: hsl(var(--primary) / 0.45); background: hsl(var(--primary) / 0.06); }
 .date-pill.selected {
   background: hsl(var(--primary));
   border-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
 }
 
-/* ── Step wizard dots ── */
+/* ── Step wizard dots ────────────────────────────────────────── */
 .step-dot {
   width: 26px; height: 26px;
   border-radius: 50%;
@@ -115,24 +162,23 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
   font-size: 11px; font-weight: 700;
   transition: all 0.2s ease;
 }
-.step-dot.done    { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.step-dot.done    { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
 .step-dot.active  { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
-.step-dot.pending { background: hsl(var(--border)); color: hsl(var(--muted-foreground)); }
+.step-dot.pending { background: hsl(var(--border));  color: hsl(var(--muted-foreground)); }
 
-/* ── Promo card ── */
+/* ── Promo card ──────────────────────────────────────────────── */
 .promo-card {
-  background: hsl(var(--secondary));
+  background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: 16px;
   position: relative;
   overflow: hidden;
 }
 .dark .promo-card {
-  background: linear-gradient(135deg, #24272A 0%, #1e2124 100%);
-  border-color: hsl(var(--border));
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(210 6% 12%) 100%);
 }
 
-/* ── Slot pill ── */
+/* ── Slot pill ───────────────────────────────────────────────── */
 .slot-pill {
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
@@ -140,14 +186,14 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
   transition: all 0.15s ease;
   cursor: pointer;
 }
-.slot-pill:hover { border-color: hsl(var(--accent)); background: hsl(var(--accent) / 0.08); }
+.slot-pill:hover { border-color: hsl(var(--primary) / 0.45); background: hsl(var(--primary) / 0.06); }
 .slot-pill.selected {
   border-color: hsl(var(--primary));
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
 }
 
-/* ── Animations ── */
+/* ── Animations ──────────────────────────────────────────────── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -164,16 +210,16 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
 .animate-scale-in { animation: scaleIn  0.2s ease-out both; }
 .animate-slide-up { animation: slideUp  0.35s cubic-bezier(0.32, 0.72, 0, 1) both; }
 
-/* ── Success ring ── */
+/* ── Success ring ────────────────────────────────────────────── */
 .success-ring {
   width: 80px; height: 80px;
   border-radius: 50%;
-  background: hsl(var(--accent) / 0.15);
-  border: 1px solid hsl(var(--accent) / 0.30);
+  background: hsl(var(--primary) / 0.12);
+  border: 1px solid hsl(var(--primary) / 0.28);
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ── Admin table ── */
+/* ── Admin table ─────────────────────────────────────────────── */
 .admin-table { width: 100%; border-collapse: collapse; }
 .admin-table th {
   text-align: left; padding: 10px 14px;
@@ -183,9 +229,9 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
 }
 .admin-table td { padding: 12px 14px; border-bottom: 1px solid hsl(var(--border)); font-size: 13px; vertical-align: middle; }
 .admin-table tr:last-child td { border-bottom: none; }
-.admin-table tr:hover td { background: hsl(var(--muted) / 0.5); }
+.admin-table tr:hover td { background: hsl(var(--muted) / 0.6); }
 
-/* ── Input field ── */
+/* ── Input field ─────────────────────────────────────────────── */
 .input-field {
   width: 100%;
   padding: 10px 16px;
@@ -198,11 +244,11 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
   outline: none;
   transition: border-color 0.15s;
 }
-.input-field::placeholder { color: hsl(var(--muted-foreground) / 0.6); }
-.input-field:focus { border-color: hsl(var(--ring)); }
+.input-field::placeholder { color: hsl(var(--muted-foreground) / 0.55); }
+.input-field:focus { border-color: hsl(var(--ring)); box-shadow: 0 0 0 3px hsl(var(--ring) / 0.12); }
 .input-field.error { border-color: hsl(var(--destructive)); }
 
-/* ── Legacy compat ── */
+/* ── Brand bar ───────────────────────────────────────────────── */
 .brand-bar {
   background-color: hsl(var(--card));
   border-bottom: 1px solid hsl(var(--border));
@@ -213,3 +259,18 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
 .shadow-brand-sm { box-shadow: none; }
 .shadow-brand-md { box-shadow: none; }
 .shadow-brand-lg { box-shadow: none; }
+
+/* ── Light mode card refinement ──────────────────────────────── */
+:root .bg-card {
+  box-shadow: 0 1px 3px hsl(166 15% 10% / 0.06), 0 1px 2px hsl(166 15% 10% / 0.04);
+}
+
+/* ── Select element styling ──────────────────────────────────── */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 36px !important;
+}
