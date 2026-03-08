@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Clock, MapPin, PawPrint, Scissors, User, Phone, Loader2, AlertCircle } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Scissors, User, Phone, Loader2, Dog, Cat } from 'lucide-react';
 import { BookingData } from '@/types';
-import { BASE_SERVICE, ADDONS, formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime } from '@/lib/utils';
+import { SERVICE_LEVELS, formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime } from '@/lib/utils';
 
 interface Props {
   data: BookingData;
@@ -15,6 +15,7 @@ export default function ConfirmStep({ data, onBack }: Props) {
   const router = useRouter();
   const [ownerName,  setOwnerName]  = useState(data.ownerName  || '');
   const [ownerPhone, setOwnerPhone] = useState(data.ownerPhone || '');
+  const [ownerEmail, setOwnerEmail] = useState(data.ownerEmail || '');
   const [submitting, setSubmitting] = useState(false);
   const [errors,     setErrors]     = useState<Record<string, string>>({});
   const [apiError,   setApiError]   = useState('');
@@ -36,34 +37,52 @@ export default function ConfirmStep({ data, onBack }: Props) {
     if (Object.keys(e).length) { setErrors(e); return; }
     setSubmitting(true);
     setApiError('');
+
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          petType: data.petType, petName: data.petName, petBreed: data.petBreed,
-          petAge: data.petAge, petSize: data.petSize ?? null, petNotes: data.petNotes || undefined,
-          service: data.service ?? 'WASH_TIDY', addons: data.addons,
-          price: data.price, duration: data.duration,
-          area: data.area, address: data.address, buildingNote: data.buildingNote || undefined,
-          mapsLink: data.mapsLink || undefined, slotId: data.slotId,
-          ownerName: ownerName.trim(), ownerPhone: ownerPhone.trim(),
+          pets: data.pets.map((p) => ({
+            name:       p.name,
+            type:       p.type,
+            breed:      p.breed,
+            size:       p.size ?? null,
+            age:        p.age,
+            notes:      p.notes,
+            service:    p.service,
+            addons:     p.addons ?? [],
+            savedPetId: p.savedPetId,
+          })),
+          slotDate:      data.slotDate,
+          slotStartTime: data.slotStartTime,
+          area:          data.area,
+          address:       data.address,
+          buildingNote:  data.buildingNote || undefined,
+          mapsLink:      data.mapsLink     || undefined,
+          ownerName:     ownerName.trim(),
+          ownerPhone:    ownerPhone.trim(),
+          ownerEmail:    ownerEmail.trim() || undefined,
         }),
       });
+
       const json = await res.json();
       if (!res.ok) { setApiError(json.error ?? 'Something went wrong. Please try again.'); return; }
 
-      if (!data.savedPetId && data.petType && data.petName) {
-        try {
-          const raw  = localStorage.getItem('scruffs_pets');
-          const pets = raw ? JSON.parse(raw) : [];
-          const already = pets.find((p: { name: string; breed: string }) => p.name === data.petName && p.breed === data.petBreed);
-          if (!already) {
-            pets.unshift({ id: crypto.randomUUID(), name: data.petName, type: data.petType, breed: data.petBreed, size: data.petSize ?? null, age: data.petAge, notes: data.petNotes || '' });
-            localStorage.setItem('scruffs_pets', JSON.stringify(pets.slice(0, 5)));
+      // Save new pets to localStorage
+      try {
+        const raw  = localStorage.getItem('scruffs_pets');
+        const pets = raw ? JSON.parse(raw) : [];
+        for (const p of data.pets) {
+          if (!p.savedPetId) {
+            const already = pets.find((s: { name: string; breed: string }) => s.name === p.name && s.breed === p.breed);
+            if (!already) {
+              pets.unshift({ id: crypto.randomUUID(), name: p.name, type: p.type, breed: p.breed, size: p.size ?? null, age: p.age, notes: p.notes || '' });
+            }
           }
-        } catch { /* ignore */ }
-      }
+        }
+        localStorage.setItem('scruffs_pets', JSON.stringify(pets.slice(0, 5)));
+      } catch { /* ignore */ }
 
       // Save location for next booking
       try {
@@ -76,13 +95,21 @@ export default function ConfirmStep({ data, onBack }: Props) {
         }));
       } catch { /* ignore */ }
 
+      // Save to bookings history
       try {
         const raw      = localStorage.getItem('scruffs_bookings');
         const bookings = raw ? JSON.parse(raw) : [];
+        const primaryPet = data.pets[0];
         bookings.unshift({
-          id: json.booking.id, bookingRef: json.booking.bookingRef, petName: data.petName,
-          service: data.service, slotDate: data.slotDate, slotStartTime: data.slotStartTime,
-          area: data.area, price: data.price, status: 'CONFIRMED',
+          id: json.booking.id,
+          bookingRef: json.booking.bookingRef,
+          petName: data.pets.map((p) => p.name).join(', '),
+          service: primaryPet?.service ?? 'SPECIAL',
+          slotDate: data.slotDate,
+          slotStartTime: data.slotStartTime,
+          area: data.area,
+          price: data.price,
+          status: 'CONFIRMED',
         });
         localStorage.setItem('scruffs_bookings', JSON.stringify(bookings.slice(0, 20)));
       } catch { /* ignore */ }
@@ -95,10 +122,6 @@ export default function ConfirmStep({ data, onBack }: Props) {
     }
   };
 
-  const addonsLabel = data.addons.length > 0
-    ? data.addons.map((k) => ADDONS.find((a) => a.key === k)?.label ?? k).join(', ')
-    : null;
-
   return (
     <div className="animate-fade-in space-y-5 pb-28">
       <div>
@@ -110,12 +133,41 @@ export default function ConfirmStep({ data, onBack }: Props) {
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-primary px-5 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <PawPrint size={14} className="text-primary-foreground/80" strokeWidth={2} />
-            <span className="text-primary-foreground font-bold text-sm">{data.petName}</span>
-            <span className="text-primary-foreground/60 text-xs">· {data.petBreed}</span>
+          <div>
+            <p className="text-primary-foreground font-bold text-sm">
+              {data.pets.length} pet{data.pets.length > 1 ? 's' : ''}
+            </p>
+            <p className="text-primary-foreground/70 text-xs">~{formatDuration(data.duration)}</p>
           </div>
           <span className="font-bold text-primary-foreground text-base">{formatPrice(data.price)}</span>
+        </div>
+
+        {/* Pets list */}
+        <div className="px-5 py-3 space-y-2.5 border-b border-border">
+          {data.pets.map((pet) => {
+            const levelInfo = SERVICE_LEVELS.find((l) => l.key === pet.service);
+            return (
+              <div key={pet.key} className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  {pet.type === 'DOG'
+                    ? <Dog size={13} className="text-primary" strokeWidth={2} />
+                    : <Cat size={13} className="text-primary" strokeWidth={2} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground">
+                    {pet.name}
+                    <span className="font-normal text-muted-foreground text-xs ml-1.5">
+                      {pet.breed}{pet.size ? `, ${pet.size}` : ''}
+                    </span>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {levelInfo?.label ?? pet.service} · ~{formatDuration(pet.duration)}
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-foreground flex-shrink-0">AED {pet.price}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Rows */}
@@ -123,40 +175,36 @@ export default function ConfirmStep({ data, onBack }: Props) {
           <SummaryRow
             icon={<Scissors size={14} className="text-primary" strokeWidth={2} />}
             label="Service"
-            value={BASE_SERVICE.name}
-            sub={[data.duration ? `~${formatDuration(data.duration)}` : null, addonsLabel].filter(Boolean).join(' · ') || undefined}
+            value={data.pets.length > 1
+              ? `${data.pets.length} pets groomed`
+              : (SERVICE_LEVELS.find((l) => l.key === data.pets[0]?.service)?.label ?? '')}
+            sub={`~${formatDuration(data.duration)} total`}
           />
-          <SummaryRow icon={<CalendarDays size={14} className="text-primary" strokeWidth={2} />} label="Date" value={data.slotDate ? formatDate(data.slotDate) : '—'} />
+          <SummaryRow
+            icon={<CalendarDays size={14} className="text-primary" strokeWidth={2} />}
+            label="Date"
+            value={data.slotDate ? formatDate(data.slotDate) : '—'}
+          />
           <SummaryRow
             icon={<Clock size={14} className="text-primary" strokeWidth={2} />}
-            label="Preferred Window"
+            label="Time"
             value={data.slotStartTime ? `${formatTime(data.slotStartTime)} → ~${formatTime(estimatedEnd)}` : '—'}
-            sub="Exact arrival confirmed by WhatsApp"
           />
-          <SummaryRow icon={<MapPin size={14} className="text-primary" strokeWidth={2} />} label="Location" value={data.area} sub={[data.address, data.buildingNote].filter(Boolean).join(', ')} />
+          <SummaryRow
+            icon={<MapPin size={14} className="text-primary" strokeWidth={2} />}
+            label="Location"
+            value={data.area}
+            sub={[data.address, data.buildingNote].filter(Boolean).join(', ')}
+          />
         </div>
 
         {/* Price footer */}
         <div className="bg-secondary/40 px-5 py-3 border-t border-border">
-          {data.addons.length > 0 && (
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-muted-foreground">Base + Add-ons</span>
-              <span className="text-[11px] text-muted-foreground">AED {data.basePrice} + AED {data.addonsPrice}</span>
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Total +VAT · pay on day</span>
             <span className="font-bold text-foreground text-lg">{formatPrice(data.price)}</span>
           </div>
         </div>
-      </div>
-
-      {/* Time range reminder */}
-      <div className="bg-primary/8 border border-primary/20 rounded-xl px-3.5 py-2.5 flex items-start gap-2.5">
-        <AlertCircle size={14} className="text-primary flex-shrink-0 mt-0.5" strokeWidth={2} />
-        <p className="text-[12px] text-foreground leading-relaxed">
-          Your selected time is a <strong>preferred window</strong>. Our groomer will WhatsApp you <strong>30 min before arrival</strong> to confirm the exact time.
-        </p>
       </div>
 
       {/* Contact details */}

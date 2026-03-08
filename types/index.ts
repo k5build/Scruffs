@@ -1,14 +1,22 @@
-export type PetType    = 'DOG' | 'CAT';
-export type PetSize    = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL';
-export type ServiceKey = 'WASH_TIDY';
-export type AddOnKey   =
-  | 'TRIM'              // Full Groom (Trimming)
-  | 'BUNDLE'            // Full Groom Bundle (Trim + Nails + Teeth)
-  | 'NAIL_GRIND'        // Nail Grind (Dremel)
-  | 'TOOTH_BRUSH'       // Tooth Brushing
-  | 'MEDICATED_SHAMPOO' // Medicated / Flea Shampoo
-  | 'DEMATTING';        // De-matting (per 10 min)
+export type PetType      = 'DOG' | 'CAT';
+export type PetSize      = 'SMALL' | 'MEDIUM' | 'LARGE' | 'XL';
+export type ServiceLevel = 'BASIC' | 'SPECIAL' | 'FULL';
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export interface BookingPetEntry {
+  key:         string;        // crypto.randomUUID() for React key
+  name:        string;
+  type:        PetType;
+  breed:       string;
+  size:        PetSize | null;
+  age:         string;
+  notes:       string;
+  service:     ServiceLevel;
+  addons:      string[];      // add-on keys e.g. ['TRIM', 'NAIL_GRIND']
+  price:       number;        // calculated (base + addons)
+  duration:    number;        // calculated minutes (base + addons)
+  savedPetId?: string;        // if loaded from saved pets
+}
 
 export interface SavedPet {
   id:    string;
@@ -20,32 +28,18 @@ export interface SavedPet {
   notes: string;
 }
 
-export interface TimeSlot {
-  id:          string;
-  date:        string;
-  startTime:   string;
-  endTime:     string;
-  isAvailable: boolean;
+export interface VirtualSlot {
+  startTime: string;  // "10:00"
+  endTime:   string;  // "11:30"
 }
 
 export interface BookingData {
-  // Step 1 – Pet
-  petType:  PetType | null;
-  petSize:  PetSize | null;
-  petName:  string;
-  petBreed: string;
-  petAge:   string;
-  petNotes: string;
-  savedPetId: string;
+  // Step 1 – Multiple pets
+  pets:     BookingPetEntry[];
+  price:    number;   // total = sum of pet prices
+  duration: number;   // total = sum of pet durations
 
-  // Step 2 – Service & Add-ons & When
-  service:       ServiceKey | null;   // always 'WASH_TIDY'
-  addons:        AddOnKey[];          // selected add-ons
-  basePrice:     number;              // base Wash & Tidy price
-  addonsPrice:   number;              // sum of add-on prices
-  price:         number;              // total = basePrice + addonsPrice
-  duration:      number;              // minutes
-  slotId:        string;
+  // Step 2 – Time slot
   slotDate:      string;
   slotStartTime: string;
   slotEndTime:   string;
@@ -65,8 +59,8 @@ export interface BookingData {
 }
 
 export const BOOKING_STEPS = [
-  { id: 1, label: 'Pet',      description: 'Who\'s getting groomed?' },
-  { id: 2, label: 'Service',  description: 'Choose service & time'   },
+  { id: 1, label: 'Pets',     description: 'Who\'s getting groomed?' },
+  { id: 2, label: 'Time',     description: 'Pick your time slot'     },
   { id: 3, label: 'Location', description: 'Where are you?'          },
   { id: 4, label: 'Confirm',  description: 'Review & book'           },
 ];

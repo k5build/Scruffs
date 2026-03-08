@@ -210,6 +210,13 @@ export const ADDONS: AddOnDef[] = [
   },
 ];
 
+export function calcAddonsDuration(addonKeys: string[]): number {
+  return addonKeys.reduce((sum, k) => {
+    const def = ADDONS.find((a) => a.key === k);
+    return sum + (def?.extraMins ?? 0);
+  }, 0);
+}
+
 export function getAddonPrice(addonKey: string, petType: string): number {
   const def = ADDONS.find((a) => a.key === addonKey);
   if (!def) return 0;
@@ -320,6 +327,63 @@ export const PET_AGE_OPTIONS = [
   '5–8 years',
   '8+ years (Senior)',
 ];
+
+/* ─────────────────────────────────────────
+   NEW SERVICE LEVELS (v2)
+───────────────────────────────────────── */
+export type ServiceLevel = 'BASIC' | 'SPECIAL' | 'FULL';
+
+export const SERVICE_PRICES: Record<string, Record<string, Record<string, number>>> = {
+  CAT: { DEFAULT: { BASIC: 149, SPECIAL: 249, FULL: 349 } },
+  DOG: {
+    SMALL:  { BASIC: 179, SPECIAL: 269, FULL: 369 },
+    MEDIUM: { BASIC: 219, SPECIAL: 319, FULL: 429 },
+    LARGE:  { BASIC: 259, SPECIAL: 379, FULL: 509 },
+    XL:     { BASIC: 299, SPECIAL: 429, FULL: 569 },
+  },
+};
+
+export const SERVICE_DURATIONS_V2: Record<string, Record<string, Record<string, number>>> = {
+  CAT: { DEFAULT: { BASIC: 30, SPECIAL: 45, FULL: 60 } },
+  DOG: {
+    SMALL:  { BASIC: 45, SPECIAL: 60,  FULL: 90  },
+    MEDIUM: { BASIC: 60, SPECIAL: 75,  FULL: 105 },
+    LARGE:  { BASIC: 75, SPECIAL: 90,  FULL: 120 },
+    XL:     { BASIC: 90, SPECIAL: 120, FULL: 150 },
+  },
+};
+
+export const SERVICE_LEVELS = [
+  {
+    key:      'BASIC' as ServiceLevel,
+    label:    'Wash & Tidy',
+    tagline:  'Bath, brush & freshen up',
+    includes: ['Luxury Bath & Blow Dry', 'Full Brush Out', 'Ear Cleaning', 'Paw Wipe & Cologne'],
+  },
+  {
+    key:      'SPECIAL' as ServiceLevel,
+    label:    'Full Groom',
+    tagline:  'Wash & Tidy + haircut',
+    includes: ['Everything in Wash & Tidy', 'Breed-Style Haircut', 'Scissor Finish & Trim'],
+    popular:  true,
+  },
+  {
+    key:      'FULL' as ServiceLevel,
+    label:    'Luxury Spa',
+    tagline:  'Full Groom + nails & teeth',
+    includes: ['Everything in Full Groom', 'Nail Grind (Dremel)', 'Teeth Brushing'],
+  },
+] as const;
+
+export function getServicePrice(petType: string, petSize: string | null, service: ServiceLevel): number {
+  if (petType === 'CAT') return SERVICE_PRICES.CAT.DEFAULT[service] ?? 149;
+  return SERVICE_PRICES.DOG[petSize ?? 'MEDIUM']?.[service] ?? 219;
+}
+
+export function getServiceDurationV2(petType: string, petSize: string | null, service: ServiceLevel): number {
+  if (petType === 'CAT') return SERVICE_DURATIONS_V2.CAT.DEFAULT[service] ?? 30;
+  return SERVICE_DURATIONS_V2.DOG[petSize ?? 'MEDIUM']?.[service] ?? 60;
+}
 
 /* ─────────────────────────────────────────
    LOYALTY

@@ -104,6 +104,9 @@ model Booking {
   // Add-ons (JSON array of keys e.g. ["TRIM","NAIL_GRIND"])
   addons     String   @default("[]")
 
+  // Multi-pet JSON (array of BookingPetEntry)
+  pets       String   @default("[]")
+
   // Status
   status     String   @default("CONFIRMED") // PENDING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELLED
 

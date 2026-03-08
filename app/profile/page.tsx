@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Dog, Cat, Trash2, Plus, User, Mail, Phone,
   CalendarDays, MapPin, RotateCcw, LogOut, ChevronRight,
-  Pencil, X, Settings, Shield, MessageCircle, PawPrint, CalendarCheck,
+  Pencil, X, Settings, Shield, MessageCircle, PawPrint, CalendarCheck, Lock,
 } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 
@@ -244,9 +244,10 @@ function ProfileContent() {
             { icon: Settings,      label: 'Settings',           sub: 'Theme, preferences', href: '/settings' },
             { icon: MessageCircle, label: 'Contact Us',          sub: 'Get in touch',       href: '/contact'  },
             { icon: Shield,        label: 'Terms & Conditions',  sub: 'Usage policy',       href: '/terms'    },
+            { icon: Lock,          label: 'Privacy Policy',      sub: 'How we use your data', href: '/privacy' },
           ].map(({ icon: Icon, label, sub, href }, i) => (
             <Link key={label} href={href} className="block">
-              <div className={`flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors ${i < 2 ? 'border-b border-border' : ''}`}>
+              <div className={`flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors ${i < 3 ? 'border-b border-border' : ''}`}>
                 <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
                   <Icon size={15} className="text-muted-foreground" strokeWidth={2} />
                 </div>

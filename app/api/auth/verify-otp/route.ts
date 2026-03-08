@@ -12,27 +12,32 @@ export async function POST(request: NextRequest) {
     const phone = normalizePhone(rawPhone);
     let verified = false;
 
-    // Try Twilio Verify first (if configured)
-    const sid    = process.env.TWILIO_ACCOUNT_SID;
-    const token  = process.env.TWILIO_AUTH_TOKEN;
-    const verify = process.env.TWILIO_VERIFY_SID;
+    // OTP_CHANNEL controls which provider was used to SEND the code.
+    // Only use Twilio Verify check when channel is 'sms' — otherwise always use DB.
+    const channel = (process.env.OTP_CHANNEL ?? 'sms').toLowerCase();
 
-    if (sid && token && verify) {
-      try {
-        const twilio = (await import('twilio')).default;
-        const client = twilio(sid, token);
-        const check = await client.verify.v2.services(verify).verificationChecks.create({
-          to:   phone,
-          code: code.trim(),
-        });
-        verified = check.status === 'approved';
-      } catch (err) {
-        console.error('[Scruffs] Twilio Verify check error:', err);
-        // fall through to DB check
+    if (channel === 'sms') {
+      const sid    = process.env.TWILIO_ACCOUNT_SID;
+      const token  = process.env.TWILIO_AUTH_TOKEN;
+      const verify = process.env.TWILIO_VERIFY_SID;
+
+      if (sid && token && verify && !sid.startsWith('ACxxx')) {
+        try {
+          const twilio = (await import('twilio')).default;
+          const client = twilio(sid, token);
+          const check  = await client.verify.v2.services(verify).verificationChecks.create({
+            to:   phone,
+            code: code.trim(),
+          });
+          verified = check.status === 'approved';
+        } catch (err) {
+          console.error('[Scruffs] Twilio Verify check error:', err);
+          // fall through to DB check
+        }
       }
     }
 
-    // DB-stored OTP check (dev mode or Twilio fallback)
+    // DB-stored OTP check — used for: meta, whatsapp, both, dev fallback
     if (!verified) {
       const otp = await prisma.otpCode.findFirst({
         where: { phone, used: false, code: code.trim() },

@@ -5,25 +5,21 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Check } from 'lucide-react';
-import { BookingData, BOOKING_STEPS, ServiceKey } from '@/types';
+import { BookingData, BOOKING_STEPS } from '@/types';
 import PetStep         from './steps/PetStep';
 import ServiceSlotStep from './steps/ServiceSlotStep';
 import LocationStep    from './steps/LocationStep';
 import ConfirmStep     from './steps/ConfirmStep';
 
 const INITIAL: BookingData = {
-  petType: null, petSize: null, petName: '', petBreed: '',
-  petAge: '', petNotes: '', savedPetId: '',
-  service: 'WASH_TIDY', addons: [], basePrice: 0, addonsPrice: 0, price: 0, duration: 60,
-  slotId: '', slotDate: '', slotStartTime: '', slotEndTime: '',
+  pets: [], price: 0, duration: 0,
+  slotDate: '', slotStartTime: '', slotEndTime: '',
   area: '', address: '', buildingNote: '', mapsLink: '', lat: null, lng: null,
   ownerName: '', ownerEmail: '', ownerPhone: '',
 };
 
 export default function BookingWizard() {
   const searchParams = useSearchParams();
-  const preService = searchParams.get('service') as ServiceKey | null;
-  const rebookId   = searchParams.get('rebook');
 
   const [step, setStep] = useState(1);
   const [data, setData] = useState<BookingData>({ ...INITIAL });
@@ -41,29 +37,13 @@ export default function BookingWizard() {
     }).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (!rebookId) return;
-    fetch(`/api/bookings/${rebookId}`).then((r) => r.ok ? r.json() : null).then((d) => {
-      if (!d?.booking) return;
-      const b = d.booking;
-      setData((prev) => ({
-        ...prev,
-        petType: b.petType ?? prev.petType, petSize: b.petSize ?? prev.petSize,
-        petName: b.petName || prev.petName, petBreed: b.petBreed || prev.petBreed,
-        petAge: b.petAge || prev.petAge, petNotes: b.petNotes || prev.petNotes,
-        service: (b.service as ServiceKey) ?? prev.service,
-        area: b.area || prev.area, address: b.address || prev.address,
-      }));
-    }).catch(() => {});
-  }, [rebookId]);
-
-  void preService;
+  void searchParams;
 
   const update = (patch: Partial<BookingData>) => setData((p) => ({ ...p, ...patch }));
   const next   = () => setStep((s) => Math.min(s + 1, 4));
   const back   = () => setStep((s) => Math.max(s - 1, 1));
 
-  const STEP_LABELS = ['Pet', 'Service', 'Location', 'Confirm'];
+  const STEP_LABELS = ['Pets', 'Time', 'Location', 'Confirm'];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

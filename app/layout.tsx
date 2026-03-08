@@ -51,6 +51,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{
           __html: `(function(){var t=localStorage.getItem('scruffs_theme');if(t!=='light')document.documentElement.classList.add('dark');})();`
         }} />
+        {/* Register service worker */}
+        <script dangerouslySetInnerHTML={{
+          __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});}`,
+        }} />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
