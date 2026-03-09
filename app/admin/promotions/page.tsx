@@ -49,9 +49,7 @@ export default function AdminPromotionsPage() {
     if (!form.title) return;
     setSaving(true);
     setMsg('');
-    const body = form.id
-      ? { action: 'update', ...form }
-      : form;
+    const body = form.id ? { action: 'update', ...form } : form;
     const res = await fetch('/api/admin/promotions', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,12 +89,12 @@ export default function AdminPromotionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Promotions &amp; Ads</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Manage banners shown on the home page</p>
+          <h1 className="text-2xl font-bold text-foreground">Promotions</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Manage banners shown on the home page</p>
         </div>
         <button
           onClick={() => { setForm(BLANK); setEditing(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-xl text-sm font-bold hover:bg-yellow-600"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-opacity"
         >
           <Plus size={15} /> New Promotion
         </button>
@@ -104,70 +102,91 @@ export default function AdminPromotionsPage() {
 
       {/* Form */}
       {editing && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
+        <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <p className="font-bold text-gray-900">{form.id ? 'Edit Promotion' : 'New Promotion'}</p>
-            <button onClick={() => { setEditing(false); setForm(BLANK); }} className="text-gray-400 hover:text-gray-600">
+            <p className="font-bold text-foreground">{form.id ? 'Edit Promotion' : 'New Promotion'}</p>
+            <button
+              onClick={() => { setEditing(false); setForm(BLANK); }}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               <X size={18} />
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Title *</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Title *</label>
               <input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="e.g. 20% Off This Weekend!"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
               />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Subtitle</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Subtitle</label>
               <input
                 value={form.subtitle ?? ''}
                 onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 placeholder="e.g. Book before Sunday — limited slots"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Button Text</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Button Text</label>
               <input
                 value={form.ctaText}
                 onChange={(e) => setForm({ ...form, ctaText: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Button URL</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Button URL</label>
               <input
                 value={form.ctaUrl}
                 onChange={(e) => setForm({ ...form, ctaUrl: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Background Color</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Background Color</label>
               <div className="flex items-center gap-2">
-                <input type="color" value={form.bgColor} onChange={(e) => setForm({ ...form, bgColor: e.target.value })} className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer" />
-                <input value={form.bgColor} onChange={(e) => setForm({ ...form, bgColor: e.target.value })} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none" />
+                <input
+                  type="color"
+                  value={form.bgColor}
+                  onChange={(e) => setForm({ ...form, bgColor: e.target.value })}
+                  className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                />
+                <input
+                  value={form.bgColor}
+                  onChange={(e) => setForm({ ...form, bgColor: e.target.value })}
+                  className="input-field font-mono"
+                />
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Text Color</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Text Color</label>
               <div className="flex items-center gap-2">
-                <input type="color" value={form.textColor} onChange={(e) => setForm({ ...form, textColor: e.target.value })} className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer" />
-                <input value={form.textColor} onChange={(e) => setForm({ ...form, textColor: e.target.value })} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none" />
+                <input
+                  type="color"
+                  value={form.textColor}
+                  onChange={(e) => setForm({ ...form, textColor: e.target.value })}
+                  className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                />
+                <input
+                  value={form.textColor}
+                  onChange={(e) => setForm({ ...form, textColor: e.target.value })}
+                  className="input-field font-mono"
+                />
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block">Priority (higher = first)</label>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block uppercase tracking-wide">Priority (higher = first)</label>
               <input
                 type="number"
                 value={form.priority}
                 onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className="input-field"
               />
             </div>
             <div className="flex items-center gap-2 pt-5">
@@ -176,9 +195,9 @@ export default function AdminPromotionsPage() {
                 id="active"
                 checked={form.active}
                 onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                className="w-4 h-4 accent-yellow-500"
+                className="w-4 h-4 accent-primary"
               />
-              <label htmlFor="active" className="text-sm font-medium text-gray-700">Active (visible on home page)</label>
+              <label htmlFor="active" className="text-sm font-medium text-foreground">Active (visible on home page)</label>
             </div>
           </div>
 
@@ -191,17 +210,20 @@ export default function AdminPromotionsPage() {
             </button>
           </div>
 
-          {msg && <p className="text-sm font-medium text-green-700">{msg}</p>}
+          {msg && <p className="text-sm font-medium text-green-600">{msg}</p>}
 
           <div className="flex gap-3">
             <button
               onClick={save}
               disabled={saving || !form.title}
-              className="flex items-center gap-2 px-5 py-2.5 bg-yellow-500 text-white rounded-xl text-sm font-bold hover:bg-yellow-600 disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
-              <Check size={14} /> {saving ? 'Saving…' : 'Save Promotion'}
+              <Check size={14} /> {saving ? 'Saving...' : 'Save Promotion'}
             </button>
-            <button onClick={() => { setEditing(false); setForm(BLANK); }} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900">
+            <button
+              onClick={() => { setEditing(false); setForm(BLANK); }}
+              className="px-5 py-2.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+            >
               Cancel
             </button>
           </div>
@@ -210,40 +232,44 @@ export default function AdminPromotionsPage() {
 
       {/* Promotions list */}
       {loading ? (
-        <div className="text-center py-12 text-gray-400">Loading…</div>
+        <div className="text-center py-12">
+          <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
       ) : promos.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-muted-foreground">
           <p className="text-lg mb-2">No promotions yet</p>
           <p className="text-sm">Create your first promotion to show it on the home page</p>
         </div>
       ) : (
         <div className="space-y-3">
           {promos.map((p) => (
-            <div key={p.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div key={p.id} className="bg-card rounded-2xl border border-border overflow-hidden">
               <div className="flex items-center gap-4 p-4">
-                {/* Color swatch */}
                 <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: p.bgColor }}>
                   <span className="text-[10px] font-bold" style={{ color: p.textColor }}>{p.priority}</span>
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm">{p.title}</p>
-                  {p.subtitle && <p className="text-xs text-gray-500 truncate">{p.subtitle}</p>}
-                  <p className="text-xs text-gray-400 mt-0.5">→ {p.ctaText} · {p.ctaUrl}</p>
+                  <p className="font-bold text-foreground text-sm">{p.title}</p>
+                  {p.subtitle && <p className="text-xs text-muted-foreground truncate">{p.subtitle}</p>}
+                  <p className="text-xs text-muted-foreground mt-0.5">{p.ctaText} · {p.ctaUrl}</p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-muted text-muted-foreground border border-border'}`}>
                     {p.active ? 'Live' : 'Off'}
                   </span>
-                  <button onClick={() => toggle(p.id)} className="text-gray-400 hover:text-gray-700">
-                    {p.active ? <ToggleRight size={20} className="text-green-600" /> : <ToggleLeft size={20} />}
+                  <button onClick={() => toggle(p.id)} className="text-muted-foreground hover:text-foreground transition-colors">
+                    {p.active
+                      ? <ToggleRight size={22} className="text-green-600" />
+                      : <ToggleLeft size={22} />
+                    }
                   </button>
-                  <button onClick={() => edit(p)} className="text-gray-400 hover:text-gray-700">
-                    <Pencil size={16} />
+                  <button onClick={() => edit(p)} className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors">
+                    <Pencil size={15} />
                   </button>
-                  <button onClick={() => del(p.id)} className="text-red-400 hover:text-red-600">
-                    <Trash2 size={16} />
+                  <button onClick={() => del(p.id)} className="text-muted-foreground hover:text-destructive p-1 rounded-lg hover:bg-destructive/10 transition-colors">
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import { LogOut } from 'lucide-react';
+
 export default function LogoutButton() {
   const handleLogout = async () => {
     await fetch('/api/admin/auth', { method: 'DELETE' });
@@ -9,8 +11,9 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive font-medium transition-colors"
     >
+      <LogOut size={13} />
       Sign Out
     </button>
   );

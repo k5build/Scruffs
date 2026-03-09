@@ -206,9 +206,23 @@ h1, h2, h3, .heading { font-family: 'Inter', system-ui, sans-serif; font-weight:
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
-.animate-fade-in  { animation: fadeInUp 0.3s ease-out both; }
-.animate-scale-in { animation: scaleIn  0.2s ease-out both; }
-.animate-slide-up { animation: slideUp  0.35s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes statCardIn {
+  from { opacity: 0; transform: perspective(700px) translateY(20px) rotateX(8deg) scale(0.96); }
+  to   { opacity: 1; transform: perspective(700px) translateY(0)   rotateX(0deg) scale(1);    }
+}
+@keyframes sidebarItemIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes logoPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163,192,190,0.0); }
+  50%       { box-shadow: 0 0 0 6px rgba(163,192,190,0.15); }
+}
+.animate-fade-in    { animation: fadeInUp 0.3s ease-out both; }
+.animate-scale-in   { animation: scaleIn  0.2s ease-out both; }
+.animate-slide-up   { animation: slideUp  0.35s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.admin-stat-card    { animation: statCardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.admin-logo-ring    { animation: logoPulse 3s ease-in-out infinite; }
 
 /* ── Success ring ────────────────────────────────────────────── */
 .success-ring {

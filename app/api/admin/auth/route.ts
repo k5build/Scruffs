@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+
+const ADMIN_PW     = process.env.ADMIN_PASSWORD ?? 'scruffs2024';
+const ADMIN_COOKIE = process.env.ADMIN_SECRET   ?? 'scruffs2024';
 
 export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json();
 
-    if (password !== process.env.ADMIN_PASSWORD) {
+    if (password !== ADMIN_PW) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
     const response = NextResponse.json({ success: true });
-    response.cookies.set('admin_auth', process.env.ADMIN_SECRET ?? 'scruffs-admin', {
+    response.cookies.set('admin_auth', ADMIN_COOKIE, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
