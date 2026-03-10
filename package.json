@@ -13,9 +13,13 @@
     "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build",
     "postinstall": "prisma generate",
     "icons": "node scripts/generate-icons.mjs",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
-    "cap:ios": "npx cap open ios"
+    "cap:ios": "npx cap open ios",
+    "cap:build:android": "npx cap sync android && npx cap open android",
+    "cap:update": "npx cap update"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
