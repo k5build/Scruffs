@@ -62,7 +62,7 @@ const nextConfig = {
       {
         source: '/(.*)',
         has: [{ type: 'header', key: 'x-forwarded-proto', value: 'http' }],
-        destination: 'https://scruffs.vercel.app/:path*',
+        destination: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://scruffs.vercel.app'}/:path*`,
         permanent: true,
       },
     ];

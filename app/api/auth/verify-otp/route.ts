@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Too many attempts. Request a new code.' }, { status: 429 });
       }
 
+      // Increment attempt counter before verifying (prevents brute force)
+      await prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+
       // Mark used
       await prisma.otpCode.update({ where: { id: otp.id }, data: { used: true } });
       verified = true;

@@ -20,10 +20,15 @@ export async function GET(request: NextRequest) {
     if (status) where.status = status;
     if (date) where.slot = { date };
 
+    const page  = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+    const limit = Math.min(200, Math.max(1, parseInt(searchParams.get('limit') ?? '200', 10)));
+
     const bookings = await prisma.booking.findMany({
       where,
       include: { slot: true },
       orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
 
     return NextResponse.json({ bookings });

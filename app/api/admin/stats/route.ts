@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 
 function isAdmin(request: NextRequest) {
   const token = request.cookies.get('admin_auth')?.value;
-  return token === (process.env.ADMIN_SECRET ?? 'scruffs-admin');
+  return token === (process.env.ADMIN_SECRET ?? 'scruffs2024');
 }
 
 export async function GET(request: NextRequest) {
