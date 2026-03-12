@@ -49,17 +49,47 @@ async function sendViaTwilioWhatsAppMessages(phone: string, code: string): Promi
 }
 
 // ── Meta WhatsApp Cloud API ────────────────────────────────────────────────────
+// Template setup (create in Meta Business Suite → WhatsApp → Message Templates):
+//
+//   Category:  AUTHENTICATION  (or UTILITY)
+//   Name:      set via WHATSAPP_TEMPLATE_NAME env var (default: scruffs_otp)
+//   Language:  English (en_US)
+//   Body:      "{{1}} is your Scruffs verification code. Valid for 10 minutes."
+//   Button:    COPY CODE  (optional — set WHATSAPP_TEMPLATE_COPY_BUTTON=true)
+//
 async function sendViaMetaWhatsApp(phone: string, code: string): Promise<boolean> {
-  const waToken   = process.env.WHATSAPP_TOKEN;
-  const waPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const waToken    = process.env.WHATSAPP_TOKEN;
+  const waPhoneId  = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const templateName = process.env.WHATSAPP_TEMPLATE_NAME ?? 'scruffs_otp';
+  const hasCopyBtn   = process.env.WHATSAPP_TEMPLATE_COPY_BUTTON === 'true';
+
   if (!waToken || !waPhoneId) return false;
 
-  // Strip leading + for WhatsApp API
+  // WhatsApp API requires numbers without leading +
   const to = phone.startsWith('+') ? phone.slice(1) : phone;
+
+  // Build template components
+  // Body always includes the code as parameter {{1}}
+  const components: object[] = [
+    {
+      type:       'body',
+      parameters: [{ type: 'text', text: code }],
+    },
+  ];
+
+  // If the template has a COPY CODE button, include the button component
+  if (hasCopyBtn) {
+    components.push({
+      type:       'button',
+      sub_type:   'COPY_CODE',
+      index:      '0',
+      parameters: [{ type: 'COUPON_CODE', coupon_code: code }],
+    });
+  }
 
   try {
     const res = await fetch(
-      `https://graph.facebook.com/v18.0/${waPhoneId}/messages`,
+      `https://graph.facebook.com/v21.0/${waPhoneId}/messages`,
       {
         method:  'POST',
         headers: {
@@ -69,22 +99,19 @@ async function sendViaMetaWhatsApp(phone: string, code: string): Promise<boolean
         body: JSON.stringify({
           messaging_product: 'whatsapp',
           to,
-          type: 'template',
+          type:     'template',
           template: {
-            name:     'scruffs_otp',
-            language: { code: 'en_US' },
-            components: [{
-              type:       'body',
-              parameters: [{ type: 'text', text: code }],
-            }],
+            name:       templateName,
+            language:   { code: 'en_US' },
+            components,
           },
         }),
       }
     );
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error('[Scruffs] Meta WhatsApp error:', err);
+      const errBody = await res.json().catch(() => ({}));
+      console.error('[Scruffs] Meta WhatsApp error:', JSON.stringify(errBody));
       return false;
     }
     return true;
