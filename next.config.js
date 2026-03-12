@@ -21,6 +21,28 @@ const nextConfig = {
           { key: 'Referrer-Policy',            value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',         value: 'camera=(), microphone=(), geolocation=(self)' },
           { key: 'Strict-Transport-Security',  value: 'max-age=63072000; includeSubDomains; preload' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              // Next.js requires unsafe-inline/unsafe-eval for hydration & dev
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://appleid.cdn-apple.com",
+              "style-src 'self' 'unsafe-inline'",
+              // Images: self + data URIs + all HTTPS (QR codes, CDN images)
+              "img-src 'self' data: blob: https:",
+              "font-src 'self' data:",
+              // API connections
+              "connect-src 'self' https://api.stripe.com https://www.googleapis.com https://accounts.google.com https://appleid.apple.com",
+              // Stripe payment iframe
+              "frame-src https://js.stripe.com",
+              // Prevent plugin injection (Flash, etc.)
+              "object-src 'none'",
+              // Prevent base-tag injection
+              "base-uri 'self'",
+              // Restrict form submissions (Apple Sign-In posts back here)
+              "form-action 'self' https://appleid.apple.com",
+            ].join('; '),
+          },
         ],
       },
       // PWA files — no-cache so updates propagate immediately

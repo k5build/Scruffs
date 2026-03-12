@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { isAdminRequest } from '@/lib/adminAuth';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? 'scruffs-jwt-secret-dev-CHANGE-IN-PRODUCTION'
-);
+function getJwtSecret(): Uint8Array {
+  return new TextEncoder().encode(
+    process.env.JWT_SECRET ?? 'scruffs-jwt-secret-dev-CHANGE-IN-PRODUCTION'
+  );
+}
 
 async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const token = request.cookies.get('scruffs_session')?.value;
   if (!token) return false;
-  try { await jwtVerify(token, JWT_SECRET); return true; }
+  try { await jwtVerify(token, getJwtSecret()); return true; }
   catch { return false; }
 }
 
@@ -17,9 +20,8 @@ export async function middleware(request: NextRequest) {
 
   // ── Admin protection ──────────────────────────────────────────
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    const token  = request.cookies.get('admin_auth')?.value;
-    const secret = process.env.ADMIN_SECRET ?? 'scruffs2024';
-    if (token !== secret) {
+    const authed = await isAdminRequest(request);
+    if (!authed) {
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('from', pathname);
       return NextResponse.redirect(loginUrl);

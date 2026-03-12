@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
-
-function isAdmin(request: NextRequest) {
-  const token = request.cookies.get('admin_auth')?.value;
-  return token === (process.env.ADMIN_SECRET ?? 'scruffs2024');
-}
+import { isAdminRequest } from '@/lib/adminAuth';
 
 export async function GET(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!await isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

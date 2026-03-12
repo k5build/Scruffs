@@ -26,9 +26,9 @@ const CreateBookingSchema = z.object({
   area:          z.string().min(1),
   address:       z.string().min(1),
   buildingNote:  z.string().optional(),
-  mapsLink:      z.string().optional(),
+  mapsLink:      z.string().url().optional(),
   ownerName:     z.string().min(1),
-  ownerEmail:    z.string().email().optional().or(z.literal('')),
+  ownerEmail:    z.string().email().optional(),
   ownerPhone:    z.string().min(8),
 });
 

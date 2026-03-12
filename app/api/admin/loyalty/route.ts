@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { recalcTier } from '@/lib/utils';
-
-function isAdminAuthed(request: NextRequest): boolean {
-  const token  = request.cookies.get('admin_auth')?.value;
-  const secret = process.env.ADMIN_SECRET ?? 'scruffs2024';
-  return token === secret;
-}
+import { isAdminRequest } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
 /** GET /api/admin/loyalty?q=searchterm — search users */
 export async function GET(request: NextRequest) {
-  if (!isAdminAuthed(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const q = request.nextUrl.searchParams.get('q') ?? '';
   const users = await prisma.user.findMany({
@@ -33,7 +28,7 @@ export async function GET(request: NextRequest) {
 
 /** POST /api/admin/loyalty — award or deduct points */
 export async function POST(request: NextRequest) {
-  if (!isAdminAuthed(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!await isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { userId, points, reason, note } = await request.json();
   if (!userId || typeof points !== 'number' || !reason) {

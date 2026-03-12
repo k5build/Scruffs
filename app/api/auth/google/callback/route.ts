@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { signToken, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/auth';
+import { signToken, SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code  = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state');
 
   const appUrl      = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const redirectUri = `${appUrl}/api/auth/google/callback`;
 
   if (error || !code) {
     return NextResponse.redirect(`${appUrl}/auth?error=google_denied`);
+  }
+
+  // Validate OAuth state parameter to prevent CSRF / authorization code injection
+  const storedState = request.cookies.get('oauth_state')?.value;
+  if (!state || !storedState || state !== storedState) {
+    console.warn('[Google OAuth] State mismatch — possible CSRF attempt');
+    return NextResponse.redirect(`${appUrl}/auth?error=google_failed`);
   }
 
   try {
@@ -62,7 +70,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (user) {
-      // Update googleId if missing
       if (!user.googleId) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -82,13 +89,10 @@ export async function GET(request: NextRequest) {
     // Issue session cookie
     const jwtToken = await signToken(user.id);
     const response = NextResponse.redirect(`${appUrl}/?welcome=1`);
-    response.cookies.set(SESSION_COOKIE, jwtToken, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge:   SESSION_MAX_AGE,
-      path:     '/',
-    });
+    response.cookies.set(SESSION_COOKIE, jwtToken, SESSION_COOKIE_OPTIONS);
+
+    // Clear the state cookie
+    response.cookies.delete('oauth_state');
 
     return response;
   } catch (err) {

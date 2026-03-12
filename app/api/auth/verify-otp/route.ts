@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { signToken, normalizePhone, SESSION_COOKIE, SESSION_MAX_AGE } from '@/lib/auth';
+import { signToken, normalizePhone, SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,13 +81,7 @@ export async function POST(request: NextRequest) {
     const jwtToken = await signToken(user.id);
 
     const response = NextResponse.json({ success: true, user: { id: user.id, phone: user.phone, name: user.name, email: user.email } });
-    response.cookies.set(SESSION_COOKIE, jwtToken, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge:   SESSION_MAX_AGE,
-      path:     '/',
-    });
+    response.cookies.set(SESSION_COOKIE, jwtToken, SESSION_COOKIE_OPTIONS);
 
     return response;
   } catch (err) {

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomInt } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { normalizePhone } from '@/lib/auth';
 
 function generateOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  // crypto.randomInt is cryptographically secure — Math.random() is NOT
+  return String(randomInt(100000, 1000000)).padStart(6, '0');
 }
 
 // ── WhatsApp Cloud API (Meta direct) ──────────────────────────────────────────

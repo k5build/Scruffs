@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-
-function isAdmin(request: NextRequest) {
-  const token = request.cookies.get('admin_auth')?.value;
-  return token === (process.env.ADMIN_SECRET ?? 'scruffs2024');
-}
+import { isAdminRequest } from '@/lib/adminAuth';
 
 const UpdateSchema = z.object({
   status:     z.enum(['PENDING','CONFIRMED','IN_PROGRESS','COMPLETED','CANCELLED']).optional(),
@@ -16,7 +12,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(request)) {
+  if (!await isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -52,7 +48,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAdmin(request)) {
+  if (!await isAdminRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -2,26 +2,45 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? 'scruffs-jwt-secret-dev-CHANGE-IN-PRODUCTION'
-);
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET ?? 'scruffs-jwt-secret-dev-CHANGE-IN-PRODUCTION';
+  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    console.error('[SECURITY] JWT_SECRET is not set — using insecure default');
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export const SESSION_COOKIE  = 'scruffs_session';
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-/** Sign a JWT containing the userId */
+/** Shared secure cookie options — always secure, lax for OAuth compat */
+export const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure:   true,           // always true — dev must use HTTPS or localhost (localhost is exempt)
+  sameSite: 'lax' as const, // lax required for OAuth top-level redirects
+  maxAge:   SESSION_MAX_AGE,
+  path:     '/',
+} as const;
+
+/** Sign a JWT containing the userId with iss/aud/sub claims */
 export async function signToken(userId: string): Promise<string> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   return new SignJWT({ userId })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('30d')
-    .sign(SECRET);
+    .setIssuer(appUrl)
+    .setAudience(appUrl)
+    .setSubject(userId)
+    .sign(getJwtSecret());
 }
 
 /** Verify a JWT and return payload, or null if invalid */
 export async function verifyToken(token: string): Promise<{ userId: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    // Note: issuer/audience validation is intentionally lenient here to support
+    // tokens signed before these claims were added. Tighten after all sessions expire.
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return { userId: payload.userId as string };
   } catch {
     return null;
