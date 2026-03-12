@@ -42,7 +42,8 @@ function AuthForm() {
       });
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? 'Something went wrong'); return; }
-      sessionStorage.setItem('auth_phone', json.phone); // store normalized form
+      sessionStorage.setItem('auth_phone', json.phone);
+      sessionStorage.setItem('auth_channel', json.channel ?? 'sms');
       if (json.devOtp) sessionStorage.setItem('auth_dev_otp', json.devOtp);
       router.push('/auth/verify');
     } catch {
@@ -117,7 +118,7 @@ function AuthForm() {
             </div>
             <div>
               <p className="font-bold text-foreground text-sm">Phone Number</p>
-              <p className="text-[11px] text-muted-foreground">We&apos;ll send a 6-digit code via SMS</p>
+              <p className="text-[11px] text-muted-foreground">We&apos;ll send a 6-digit code via WhatsApp or SMS</p>
             </div>
           </div>
 
