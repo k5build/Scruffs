@@ -90,7 +90,7 @@ function customerEmailHtml(b: BookingDetails): string {
 </td></tr>
 <tr><td style="background:#F4F2EE;padding:24px 40px;text-align:center;border-top:1px solid #E8E4DE;">
   <p style="color:#7A8582;font-size:11px;margin:0 0 4px;">Scruffs.ae · Est. 2022 · Dubai, UAE</p>
-  <p style="color:#A8AFAD;font-size:10px;margin:12px 0 0;">Questions? WhatsApp: +971 50 123 4567</p>
+  <p style="color:#A8AFAD;font-size:10px;margin:12px 0 0;">Questions? WhatsApp: +971 58 689 4998</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -153,7 +153,7 @@ function adminEmailHtml(b: BookingDetails): string {
      style="display:inline-block;background:#25D366;color:#ffffff;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;margin-right:10px;">
      WhatsApp Customer
   </a>
-  <a href="https://scruffs.vercel.app/admin"
+  <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://scruffs.vercel.app'}/admin"
      style="display:inline-block;background:#3A4F4A;color:#DBD4C7;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;">
      Open Admin Panel
   </a>

@@ -135,7 +135,7 @@ export default function TermsPage() {
           <p className="font-semibold text-foreground text-sm mb-1">Questions about these terms?</p>
           <p className="text-xs text-muted-foreground mb-3">Contact our team and we&apos;ll clarify anything.</p>
           <a
-            href="https://wa.me/971501234567"
+            href="https://wa.me/971586894998"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"

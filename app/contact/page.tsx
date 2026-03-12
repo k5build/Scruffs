@@ -30,28 +30,28 @@ export default function ContactPage() {
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Get in Touch</p>
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
 
-            <a href="https://wa.me/971501234567" target="_blank" rel="noopener noreferrer" className="block">
+            <a href="https://wa.me/971586894998" target="_blank" rel="noopener noreferrer" className="block">
               <div className="flex items-center gap-3 px-4 py-4 border-b border-border hover:bg-secondary/50 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-[#25D366]/15 flex items-center justify-center flex-shrink-0">
                   <MessageCircle size={18} className="text-[#25D366]" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-foreground text-sm">WhatsApp</p>
-                  <p className="text-xs text-muted-foreground">+971 50 123 4567</p>
+                  <p className="text-xs text-muted-foreground">+971 58 689 4998</p>
                   <p className="text-[10px] text-primary mt-0.5 font-semibold">Fastest response</p>
                 </div>
                 <span className="text-[10px] font-bold bg-[#25D366]/15 text-[#25D366] px-2 py-0.5 rounded-full">Online</span>
               </div>
             </a>
 
-            <a href="tel:+971501234567" className="block">
+            <a href="tel:+971586894998" className="block">
               <div className="flex items-center gap-3 px-4 py-4 border-b border-border hover:bg-secondary/50 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Phone size={18} className="text-primary" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-foreground text-sm">Call Us</p>
-                  <p className="text-xs text-muted-foreground">+971 50 123 4567</p>
+                  <p className="text-xs text-muted-foreground">+971 58 689 4998</p>
                 </div>
               </div>
             </a>

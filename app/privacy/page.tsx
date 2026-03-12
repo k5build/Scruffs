@@ -32,7 +32,7 @@ export default function PrivacyPage() {
           <p>Scruffs is a mobile pet grooming service operating in Dubai, UAE. Our website and app are available at scruffs.ae. You can contact us at:</p>
           <ul>
             <li>Email: hello@scruffs.ae</li>
-            <li>WhatsApp: +971 50 123 4567</li>
+            <li>WhatsApp: +971 58 689 4998</li>
           </ul>
         </Section>
 
@@ -107,7 +107,7 @@ export default function PrivacyPage() {
           <p>If you have any questions about this Privacy Policy or how we handle your data, please reach out:</p>
           <ul>
             <li>Email: hello@scruffs.ae</li>
-            <li>WhatsApp: +971 50 123 4567</li>
+            <li>WhatsApp: +971 58 689 4998</li>
             <li>Location: Dubai, United Arab Emirates</li>
           </ul>
         </Section>
