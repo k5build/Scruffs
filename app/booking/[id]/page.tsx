@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CalendarDays, Clock, MapPin, PawPrint, Scissors, Check, ChevronRight, AlertCircle, Star } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
+import { decryptField } from '@/lib/crypto';
 import { formatDate, formatTime, formatDuration, formatPrice, addMinutesToTime, buildBookingWhatsApp, BASE_SERVICE, ADDONS } from '@/lib/utils';
 import PaymentSection from '@/components/booking/PaymentSection';
 
@@ -19,14 +20,19 @@ export default async function BookingConfirmationPage({ params }: Props) {
 
   if (!booking) notFound();
 
+  // Decrypt PII fields before rendering
+  const ownerName    = decryptField(booking.ownerName);
+  const ownerPhone   = decryptField(booking.ownerPhone);
+  const address      = decryptField(booking.address);
+  const buildingNote = booking.buildingNote ? decryptField(booking.buildingNote) : null;
+
   const bookingAddons = (() => { try { return JSON.parse(booking.addons ?? '[]') as string[]; } catch { return []; } })();
   const estimatedEnd  = addMinutesToTime(booking.slot.startTime, booking.duration);
   const waUrl         = buildBookingWhatsApp({
     bookingRef: booking.bookingRef, petName: booking.petName, petBreed: booking.petBreed,
     petSize: booking.petSize, service: booking.service, price: booking.price,
     slotDate: booking.slot.date, slotStartTime: booking.slot.startTime,
-    area: booking.area, address: booking.address, ownerName: booking.ownerName,
-    ownerPhone: booking.ownerPhone, duration: booking.duration,
+    area: booking.area, address, ownerName, ownerPhone, duration: booking.duration,
   });
 
   return (
@@ -106,7 +112,7 @@ export default async function BookingConfirmationPage({ params }: Props) {
               sub={[`~${formatDuration(booking.duration)}`, bookingAddons.length > 0 ? bookingAddons.map((k) => ADDONS.find((a) => a.key === k)?.label ?? k).join(', ') : null].filter(Boolean).join(' · ')} />
             <ConfirmRow icon={<CalendarDays size={14} className="text-primary" strokeWidth={2} />} label="Date" value={formatDate(booking.slot.date)} />
             <ConfirmRow icon={<Clock size={14} className="text-primary" strokeWidth={2} />} label="Time Window" value={`${formatTime(booking.slot.startTime)} → ~${formatTime(estimatedEnd)}`} sub="Exact arrival confirmed by WhatsApp" />
-            <ConfirmRow icon={<MapPin size={14} className="text-primary" strokeWidth={2} />} label="Location" value={booking.area} sub={[booking.address, booking.buildingNote].filter(Boolean).join(', ')} />
+            <ConfirmRow icon={<MapPin size={14} className="text-primary" strokeWidth={2} />} label="Location" value={booking.area} sub={[address, buildingNote].filter(Boolean).join(', ')} />
           </div>
 
           <div className="bg-secondary/40 px-5 py-3 border-t border-border">

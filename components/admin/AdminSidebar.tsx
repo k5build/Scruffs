@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, CalendarDays, Clock, Star,
-  Megaphone, ExternalLink, LogOut,
+  Megaphone, ExternalLink, LogOut, ShieldCheck,
 } from 'lucide-react';
 
 const NAV = [
@@ -14,6 +14,7 @@ const NAV = [
   { href: '/admin/slots',        label: 'Slots',        Icon: Clock           },
   { href: '/admin/loyalty',      label: 'Loyalty',      Icon: Star            },
   { href: '/admin/promotions',   label: 'Promotions',   Icon: Megaphone       },
+  { href: '/admin/audit',        label: 'Audit Log',    Icon: ShieldCheck     },
 ];
 
 export default function AdminSidebar() {

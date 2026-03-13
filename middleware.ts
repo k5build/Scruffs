@@ -17,6 +17,8 @@ async function isAuthenticated(request: NextRequest): Promise<boolean> {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // Use Web Crypto API (Edge Runtime compatible, available in all Next.js runtimes)
+  const requestId    = crypto.randomUUID();
 
   // ── Admin protection ──────────────────────────────────────────
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
@@ -53,9 +55,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  // Add X-Request-ID to all responses for log correlation
+  response.headers.set('X-Request-ID', requestId);
+  return response;
 }
 
 export const config = {
-  matcher: ['/', '/auth', '/admin/:path*', '/profile'],
+  matcher: ['/', '/auth', '/admin/:path*', '/profile', '/api/:path*'],
 };

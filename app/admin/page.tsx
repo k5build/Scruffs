@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 import StatsCards from '@/components/admin/StatsCards';
 import { formatTime, formatPrice } from '@/lib/utils';
+import { decryptField } from '@/lib/crypto';
 import { Dog, Cat, CalendarDays, Clock, ArrowRight, ClipboardList, Plus, Phone } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'Dashboard – Scruffs Admin' };
@@ -119,7 +120,9 @@ export default async function AdminDashboard() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {upcomingBookings.map((b) => {
-              const cfg = STATUS_CFG[b.status];
+              const cfg        = STATUS_CFG[b.status];
+              const ownerName  = decryptField(b.ownerName);
+              const ownerPhone = decryptField(b.ownerPhone);
               return (
                 <div
                   key={b.id}
@@ -139,7 +142,7 @@ export default async function AdminDashboard() {
                           {b.petName}
                           <span className="text-muted-foreground font-normal text-xs ml-1.5">· {b.petBreed}</span>
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{b.ownerName}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{ownerName}</p>
                       </div>
                     </div>
 
@@ -173,7 +176,7 @@ export default async function AdminDashboard() {
                   {/* Action buttons */}
                   <div className="flex gap-2 mt-3">
                     <a
-                      href={`https://wa.me/${b.ownerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${b.ownerName}! This is Scruffs.ae confirming ${b.petName}'s grooming appointment.`)}`}
+                      href={`https://wa.me/${ownerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${ownerName}! This is Scruffs.ae confirming ${b.petName}'s grooming appointment.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-semibold py-2 rounded-lg border border-border bg-muted hover:bg-[#25d366]/10 hover:border-[#25d366]/30 hover:text-[#128c7e] transition-all duration-200"

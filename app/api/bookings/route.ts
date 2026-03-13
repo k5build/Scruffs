@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       details:  { bookingRef, price: totalPrice },
     }).catch(() => void 0);
 
-    // Send notifications (non-blocking)
+    // Send notifications (non-blocking) — use plaintext data.* NOT booking.* (which is encrypted)
     const petNamesLabel = petsWithCalc.map((p) => p.name).join(', ');
     sendAllNotifications({
       bookingRef:    booking.bookingRef,
@@ -192,13 +192,13 @@ export async function POST(request: NextRequest) {
       duration:      booking.duration,
       slotDate:      booking.slot.date,
       slotStartTime: booking.slot.startTime,
-      area:          booking.area,
-      address:       booking.address,
-      buildingNote:  booking.buildingNote,
-      mapsLink:      booking.mapsLink,
-      ownerName:     booking.ownerName,
-      ownerPhone:    booking.ownerPhone,
-      ownerEmail:    booking.ownerEmail,
+      area:          data.area,
+      address:       data.address,
+      buildingNote:  data.buildingNote ?? null,
+      mapsLink:      data.mapsLink ?? null,
+      ownerName:     data.ownerName,
+      ownerPhone:    data.ownerPhone,
+      ownerEmail:    data.ownerEmail ?? null,
     }).catch(console.error);
 
     return NextResponse.json({ booking }, { status: 201 });

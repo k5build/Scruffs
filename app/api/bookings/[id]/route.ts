@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken, SESSION_COOKIE } from '@/lib/auth';
+import { decryptField } from '@/lib/crypto';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -15,7 +16,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     });
     if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    return NextResponse.json({ booking });
+    // Decrypt PII fields before returning to client
+    const decrypted = {
+      ...booking,
+      ownerName:    decryptField(booking.ownerName),
+      ownerPhone:   decryptField(booking.ownerPhone),
+      ownerEmail:   booking.ownerEmail    ? decryptField(booking.ownerEmail)    : null,
+      address:      decryptField(booking.address),
+      buildingNote: booking.buildingNote  ? decryptField(booking.buildingNote)  : null,
+    };
+
+    return NextResponse.json({ booking: decrypted });
   } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

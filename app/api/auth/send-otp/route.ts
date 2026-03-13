@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomInt } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { normalizePhone } from '@/lib/auth';
-import { encryptField, hashField } from '@/lib/crypto';
+import { hashField } from '@/lib/crypto';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { logger } from '@/lib/logger';
 
 function generateOtp(): string {
@@ -133,27 +134,41 @@ async function sendViaMetaWhatsApp(phone: string, code: string): Promise<boolean
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? request.headers.get('x-real-ip')
+      ?? 'unknown';
+
+    // Per-IP rate limit: 10 OTP requests per hour
+    const ipLimit = checkRateLimit(`${ip}:send-otp`, 10, 60 * 60 * 1000);
+    if (!ipLimit.allowed) {
+      logger.warn('send-otp', 'OTP IP rate limit hit', { ip, action: 'otp.ip_rate_limited' });
+      return NextResponse.json(
+        { error: 'Too many requests from this network. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(ipLimit.retryAfter) } },
+      );
+    }
+
     const { phone: rawPhone } = await request.json();
     if (!rawPhone) return NextResponse.json({ error: 'Phone required' }, { status: 400 });
 
     const phone     = normalizePhone(rawPhone);
     const phoneHash = hashField(phone);
 
-    // Rate limit: max 3 OTPs per phone per 10 min — use phoneHash for indexed lookup
+    // Per-phone rate limit: max 3 OTPs per phone per 10 min — use phoneHash for indexed lookup
     const recent = await prisma.otpCode.count({
       where: { phoneHash, createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) } },
     });
     if (recent >= 3) {
-      logger.warn('send-otp', 'OTP rate limit hit', { phone, action: 'otp.rate_limited' });
+      logger.warn('send-otp', 'OTP phone rate limit hit', { phone, action: 'otp.rate_limited' });
       return NextResponse.json({ error: 'Too many attempts. Wait 10 minutes.' }, { status: 429 });
     }
 
-    // Ensure user exists — store encrypted phone and hash
-    const encryptedPhone = encryptField(phone);
+    // Ensure user exists — phone MUST stay plaintext (it is the auth identity / lookup key)
+    // Only phoneHash is stored alongside it for future indexed lookups
     await prisma.user.upsert({
       where:  { phone },
       update: { phoneHash },
-      create: { phone: encryptedPhone, phoneHash },
+      create: { phone, phoneHash },
     });
 
     const code      = generateOtp();
