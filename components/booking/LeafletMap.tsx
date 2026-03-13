@@ -41,6 +41,9 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
         maxZoom: 19,
       }).addTo(map);
 
+      // Fix tiles not rendering when map is inside a conditionally shown container
+      setTimeout(() => map.invalidateSize(), 100);
+
       // Fire onMoved as the map pans
       if (onMoved) {
         map.on('moveend', () => {
