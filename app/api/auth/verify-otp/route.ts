@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signToken, normalizePhone, SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from '@/lib/auth';
+import { hashField } from '@/lib/crypto';
+import { logger } from '@/lib/logger';
 
 /** Use Twilio Verify check for SMS and WhatsApp Verify channels */
 async function checkViaTwilioVerify(phone: string, code: string): Promise<boolean> {
@@ -18,7 +20,9 @@ async function checkViaTwilioVerify(phone: string, code: string): Promise<boolea
     });
     return check.status === 'approved';
   } catch (err) {
-    console.error('[Scruffs] Twilio Verify check error:', err);
+    logger.error('verify-otp', 'Twilio Verify check error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return false;
   }
 }
@@ -30,8 +34,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Phone and code required' }, { status: 400 });
     }
 
-    const phone = normalizePhone(rawPhone);
-    let verified = false;
+    const phone     = normalizePhone(rawPhone);
+    const phoneHash = hashField(phone);
+    let verified    = false;
 
     // OTP_CHANNEL controls which provider was used to SEND the code.
     const channel = (process.env.OTP_CHANNEL ?? 'sms').toLowerCase();
@@ -42,9 +47,10 @@ export async function POST(request: NextRequest) {
     }
 
     // DB-stored OTP check — fallback for: meta, whatsapp_messages fallback, dev mode
+    // Use phoneHash for indexed lookup
     if (!verified) {
       const otp = await prisma.otpCode.findFirst({
-        where: { phone, used: false, code: code.trim() },
+        where: { phoneHash, used: false, code: code.trim() },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -70,11 +76,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid code' }, { status: 401 });
     }
 
-    // Get or create user
+    // Get or create user — include phoneHash
     const user = await prisma.user.upsert({
       where:  { phone },
-      update: { updatedAt: new Date() },
-      create: { phone, name: null, email: null },
+      update: { phoneHash },
+      create: { phone, phoneHash, name: null, email: null },
     });
 
     // Sign JWT session
@@ -87,7 +93,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (err) {
-    console.error('POST /api/auth/verify-otp:', err);
+    logger.error('verify-otp', 'POST /api/auth/verify-otp error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

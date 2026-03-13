@@ -5,6 +5,10 @@ import { generateBookingRef, getServicePrice, getServiceDurationV2, calcAddonsPr
 import { verifyToken, SESSION_COOKIE } from '@/lib/auth';
 import { sendAllNotifications } from '@/lib/notifications';
 import { getAvailableStartTimes } from '@/lib/scheduling';
+import { encryptField } from '@/lib/crypto';
+import { audit } from '@/lib/audit';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { logger } from '@/lib/logger';
 import type { ServiceLevel } from '@/lib/utils';
 
 const PetEntrySchema = z.object({
@@ -33,6 +37,20 @@ const CreateBookingSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip')
+    ?? 'unknown';
+
+  // Rate limit: 10 bookings per IP per hour
+  const { allowed, retryAfter } = checkRateLimit(`${ip}:bookings`, 10, 60 * 60 * 1000);
+  if (!allowed) {
+    logger.warn('bookings', 'Rate limit hit on booking creation', { ip, action: 'booking.rate_limited' });
+    return NextResponse.json(
+      { error: 'Too many booking requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+    );
+  }
+
   try {
     const body = await request.json();
     const data = CreateBookingSchema.parse(body);
@@ -104,12 +122,13 @@ export async function POST(request: NextRequest) {
         price:        totalPrice,
         duration:     totalDuration,
         area:         data.area,
-        address:      data.address,
-        buildingNote: data.buildingNote ?? null,
+        // Encrypt PII fields at rest
+        address:      encryptField(data.address),
+        buildingNote: data.buildingNote ? encryptField(data.buildingNote) : null,
         mapsLink:     data.mapsLink ?? null,
-        ownerName:    data.ownerName,
-        ownerEmail:   data.ownerEmail || null,
-        ownerPhone:   data.ownerPhone,
+        ownerName:    encryptField(data.ownerName),
+        ownerEmail:   data.ownerEmail ? encryptField(data.ownerEmail) : null,
+        ownerPhone:   encryptField(data.ownerPhone),
         userId,
         slotId:       slot.id,
         status:       'CONFIRMED',
@@ -150,6 +169,15 @@ export async function POST(request: NextRequest) {
       } catch { /* loyalty failure must not block booking */ }
     }
 
+    // Audit log — non-blocking
+    audit({
+      action:   'booking.created',
+      actor:    userId ?? 'guest',
+      targetId: booking.id,
+      ip,
+      details:  { bookingRef, price: totalPrice },
+    }).catch(() => void 0);
+
     // Send notifications (non-blocking)
     const petNamesLabel = petsWithCalc.map((p) => p.name).join(', ');
     sendAllNotifications({
@@ -178,7 +206,10 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 422 });
     }
-    console.error('POST /api/bookings error:', error);
+    logger.error('bookings', 'POST /api/bookings error', {
+      error: error instanceof Error ? error.message : String(error),
+      ip,
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

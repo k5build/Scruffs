@@ -1,30 +1,60 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from') ?? '/admin';
 
+  // Step 1: password. Step 2: totp.
+  const [step,     setStep]     = useState<'password' | 'totp'>('password');
   const [password, setPassword] = useState('');
+  const [totp,     setTotp]     = useState('');
   const [show,     setShow]     = useState(false);
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); setError('');
+  const totpRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the TOTP input when the step changes
+  useEffect(() => {
+    if (step === 'totp') {
+      totpRef.current?.focus();
+    }
+  }, [step]);
+
+  const submitPassword = async () => {
+    setLoading(true);
+    setError('');
     try {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      if (!res.ok) { setError('Incorrect password. Please try again.'); return; }
+
+      if (res.status === 429) {
+        setError('Too many attempts. Please wait before trying again.');
+        return;
+      }
+
+      const data = await res.json() as { success?: boolean; requireTotp?: boolean; error?: string };
+
+      if (!res.ok) {
+        setError(data.error ?? 'Incorrect password. Please try again.');
+        return;
+      }
+
+      if (data.requireTotp) {
+        setStep('totp');
+        return;
+      }
+
+      // No TOTP required — signed in
       router.push(from);
       router.refresh();
     } catch {
@@ -32,6 +62,53 @@ function LoginForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const submitTotp = async (code: string) => {
+    if (code.length < 6) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, totp: code }),
+      });
+
+      const data = await res.json() as { success?: boolean; error?: string };
+
+      if (!res.ok) {
+        setError(data.error ?? 'Invalid authenticator code. Please try again.');
+        setTotp('');
+        totpRef.current?.focus();
+        return;
+      }
+
+      router.push(from);
+      router.refresh();
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitPassword();
+  };
+
+  const handleTotpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+    setTotp(val);
+    if (val.length === 6) {
+      void submitTotp(val);
+    }
+  };
+
+  const handleTotpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitTotp(totp);
   };
 
   return (
@@ -101,65 +178,142 @@ function LoginForm() {
             </div>
           </div>
 
-          <h1 className="text-2xl font-black text-white mb-1">Welcome back</h1>
-          <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.35)' }}>Enter your admin password to continue.</p>
+          {/* ── Step 1: Password ── */}
+          {step === 'password' && (
+            <>
+              <h1 className="text-2xl font-black text-white mb-1">Welcome back</h1>
+              <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.35)' }}>Enter your admin password to continue.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Password field */}
-            <div>
-              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={show ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter admin password"
-                  autoFocus
-                  required
-                  className="w-full px-4 py-3.5 pr-12 rounded-xl text-sm font-medium outline-none transition-all duration-200 border"
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={show ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter admin password"
+                      autoFocus
+                      required
+                      className="w-full px-4 py-3.5 pr-12 rounded-xl text-sm font-medium outline-none transition-all duration-200 border"
+                      style={{
+                        background:   'rgba(255,255,255,0.05)',
+                        borderColor:  error ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)',
+                        color:        'white',
+                      }}
+                      onFocus={(e) => { if (!error) e.target.style.borderColor = 'rgba(163,192,190,0.5)'; }}
+                      onBlur={(e)  => { if (!error) e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                    />
+                    <button type="button" onClick={() => setShow(!show)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+                      style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl text-sm"
+                    style={{ background: 'rgba(239,68,68,0.1)', borderLeft: '3px solid #ef4444', color: '#fca5a5' }}>
+                    <AlertCircle size={14} className="flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || !password}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 disabled:opacity-40 hover:-translate-y-0.5 active:translate-y-0"
                   style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    borderColor: error ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)',
-                    color: 'white',
+                    background:  'linear-gradient(135deg, #3A4F4A 0%, #2d5c54 100%)',
+                    boxShadow:   '0 4px 20px rgba(58,79,74,0.4)',
                   }}
-                  onFocus={(e) => { if (!error) e.target.style.borderColor = 'rgba(163,192,190,0.5)'; }}
-                  onBlur={(e) => { if (!error) e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-                />
-                <button type="button" onClick={() => setShow(!show)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                >
+                  {loading
+                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <><span>Continue</span><ArrowRight size={15} /></>
+                  }
                 </button>
-              </div>
-            </div>
+              </form>
+            </>
+          )}
 
-            {/* Error */}
-            {error && (
-              <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(239,68,68,0.1)', borderLeft: '3px solid #ef4444', color: '#fca5a5' }}>
-                <AlertCircle size={14} className="flex-shrink-0" />
-                {error}
+          {/* ── Step 2: TOTP ── */}
+          {step === 'totp' && (
+            <>
+              {/* Shield icon */}
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
+                style={{ background: 'rgba(163,192,190,0.1)', border: '1px solid rgba(163,192,190,0.2)' }}>
+                <ShieldCheck size={22} style={{ color: '#A3C0BE' }} />
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || !password}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 disabled:opacity-40 hover:-translate-y-0.5 active:translate-y-0"
-              style={{
-                background: 'linear-gradient(135deg, #3A4F4A 0%, #2d5c54 100%)',
-                boxShadow: '0 4px 20px rgba(58,79,74,0.4)',
-              }}
-            >
-              {loading
-                ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : <><span>Sign in</span><ArrowRight size={15} /></>
-              }
-            </button>
-          </form>
+              <h1 className="text-2xl font-black text-white mb-1">Two-factor auth</h1>
+              <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                Enter the 6-digit code from your authenticator app.
+              </p>
+
+              <form onSubmit={handleTotpSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">
+                    Authenticator code
+                  </label>
+                  <input
+                    ref={totpRef}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\d{6}"
+                    maxLength={6}
+                    value={totp}
+                    onChange={handleTotpChange}
+                    placeholder="000000"
+                    required
+                    className="w-full px-4 py-3.5 rounded-xl text-center text-2xl font-mono font-bold outline-none transition-all duration-200 border tracking-[0.5em]"
+                    style={{
+                      background:  'rgba(255,255,255,0.05)',
+                      borderColor: error ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.1)',
+                      color:       'white',
+                    }}
+                    onFocus={(e) => { if (!error) e.target.style.borderColor = 'rgba(163,192,190,0.5)'; }}
+                    onBlur={(e)  => { if (!error) e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl text-sm"
+                    style={{ background: 'rgba(239,68,68,0.1)', borderLeft: '3px solid #ef4444', color: '#fca5a5' }}>
+                    <AlertCircle size={14} className="flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || totp.length < 6}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 disabled:opacity-40 hover:-translate-y-0.5 active:translate-y-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #3A4F4A 0%, #2d5c54 100%)',
+                    boxShadow:  '0 4px 20px rgba(58,79,74,0.4)',
+                  }}
+                >
+                  {loading
+                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <><span>Verify</span><ShieldCheck size={15} /></>
+                  }
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setStep('password'); setError(''); setTotp(''); }}
+                  className="w-full text-center text-xs py-2 transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.3)' }}
+                >
+                  Back to password
+                </button>
+              </form>
+            </>
+          )}
 
           <p className="text-center text-xs mt-6" style={{ color: 'rgba(255,255,255,0.2)' }}>
             Scruffs.ae · Secured Admin Access

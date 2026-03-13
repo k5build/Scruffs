@@ -1,27 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { signAdminToken, ADMIN_COOKIE_NAME, ADMIN_COOKIE_MAX_AGE } from '@/lib/adminAuth';
+import { verifyTotp } from '@/lib/totp';
+import { logger } from '@/lib/logger';
+import { audit } from '@/lib/audit';
+import { checkRateLimit } from '@/lib/rateLimit';
 
-// In-memory rate limiter for admin login (per IP, 5 attempts per 15 min)
-// Note: resets on serverless cold start — sufficient for a single-admin app
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
-  const now       = Date.now();
-  const windowMs  = 15 * 60 * 1000;
-  const maxTries  = 5;
-  const record    = loginAttempts.get(ip);
-
-  if (!record || record.resetAt <= now) {
-    loginAttempts.set(ip, { count: 1, resetAt: now + windowMs });
-    return { allowed: true };
-  }
-  if (record.count >= maxTries) {
-    return { allowed: false, retryAfter: Math.ceil((record.resetAt - now) / 1000) };
-  }
-  record.count++;
-  return { allowed: true };
-}
+const SERVICE = 'admin-auth';
 
 /** Timing-safe string comparison — prevents timing attacks on password check */
 function safeCompare(a: string, b: string): boolean {
@@ -39,29 +24,69 @@ function safeCompare(a: string, b: string): boolean {
   }
 }
 
-export async function POST(request: NextRequest) {
-  // Get client IP for rate limiting
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? request.headers.get('x-real-ip')
-    ?? 'unknown';
+function getIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown'
+  );
+}
 
-  const { allowed, retryAfter } = checkRateLimit(ip);
+export async function POST(request: NextRequest) {
+  const ip        = getIp(request);
+  const userAgent = request.headers.get('user-agent') ?? undefined;
+
+  // Rate limit: 5 attempts per 15 minutes per IP
+  const { allowed, retryAfter } = checkRateLimit(`${ip}:admin-login`, 5, 15 * 60 * 1000);
   if (!allowed) {
+    logger.warn(SERVICE, 'Rate limit hit on admin login', { ip, action: 'admin.login.rate_limited' });
+    await audit({ action: 'admin.login.rate_limited', actor: 'unknown', ip, userAgent });
     return NextResponse.json(
       { error: 'Too many login attempts. Try again later.' },
-      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } },
     );
   }
 
   try {
-    const { password } = await request.json();
-    const ADMIN_PW = process.env.ADMIN_PASSWORD ?? 'scruffs2024';
+    const body = await request.json() as { password?: string; totp?: string };
+    const { password, totp } = body;
+
+    const ADMIN_PW      = process.env.ADMIN_PASSWORD ?? 'scruffs2024';
+    const TOTP_SECRET   = process.env.ADMIN_TOTP_SECRET;
+    const totpEnabled   = Boolean(TOTP_SECRET);
 
     if (!safeCompare(password ?? '', ADMIN_PW)) {
+      logger.warn(SERVICE, 'Admin login failed — wrong password', { ip, action: 'admin.login.failed' });
+      await audit({ action: 'admin.login.failed', actor: 'unknown', ip, userAgent, details: { reason: 'wrong_password' } });
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
-    // Issue a signed JWT as the admin session cookie
+    // Password is correct — check if TOTP is enabled
+    if (totpEnabled) {
+      if (!TOTP_SECRET) {
+        // Should never reach here due to totpEnabled check, but satisfies TS
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      }
+
+      // Step 1: password-only → prompt for TOTP
+      if (!totp) {
+        logger.info(SERVICE, 'Admin password correct — requesting TOTP', { ip, action: 'admin.login.totp_required' });
+        return NextResponse.json({ requireTotp: true });
+      }
+
+      // Step 2: verify TOTP
+      const totpValid = verifyTotp(TOTP_SECRET, String(totp));
+      if (!totpValid) {
+        logger.warn(SERVICE, 'Admin login failed — wrong TOTP', { ip, action: 'admin.login.totp_failed' });
+        await audit({ action: 'admin.login.totp_failed', actor: 'admin', ip, userAgent, details: { reason: 'wrong_totp' } });
+        return NextResponse.json({ error: 'Invalid authenticator code' }, { status: 401 });
+      }
+    } else {
+      // TOTP not configured — warn and proceed with password only
+      logger.warn(SERVICE, 'ADMIN_TOTP_SECRET not set — issuing token without 2FA (set it to enable TOTP)', { ip });
+    }
+
+    // Issue signed JWT as admin session cookie
     const adminToken = await signAdminToken();
     const response   = NextResponse.json({ success: true });
 
@@ -73,8 +98,15 @@ export async function POST(request: NextRequest) {
       path:     '/',
     });
 
+    logger.info(SERVICE, 'Admin login successful', { ip, action: 'admin.login.success' });
+    await audit({ action: 'admin.login', actor: 'admin', ip, userAgent, details: { totpUsed: totpEnabled } });
+
     return response;
-  } catch {
+  } catch (err) {
+    logger.error(SERVICE, 'Admin auth route error', {
+      ip,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

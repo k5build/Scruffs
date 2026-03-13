@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomInt } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { normalizePhone } from '@/lib/auth';
+import { encryptField, hashField } from '@/lib/crypto';
+import { logger } from '@/lib/logger';
 
 function generateOtp(): string {
   // crypto.randomInt is cryptographically secure — Math.random() is NOT
@@ -21,7 +23,9 @@ async function sendViaTwilioVerify(phone: string, channel: 'sms' | 'whatsapp'): 
     await client.verify.v2.services(verify).verifications.create({ to: phone, channel });
     return true;
   } catch (err) {
-    console.error(`[Scruffs] Twilio Verify (${channel}) error:`, err);
+    logger.error('send-otp', `Twilio Verify (${channel}) error`, {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return false;
   }
 }
@@ -43,7 +47,9 @@ async function sendViaTwilioWhatsAppMessages(phone: string, code: string): Promi
     });
     return true;
   } catch (err) {
-    console.error('[Scruffs] Twilio WhatsApp Messages error:', err);
+    logger.error('send-otp', 'Twilio WhatsApp Messages error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return false;
   }
 }
@@ -110,13 +116,17 @@ async function sendViaMetaWhatsApp(phone: string, code: string): Promise<boolean
     );
 
     if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      console.error('[Scruffs] Meta WhatsApp error:', JSON.stringify(errBody));
+      const errBody = await res.json().catch(() => ({})) as Record<string, unknown>;
+      logger.error('send-otp', 'Meta WhatsApp API error', {
+        error: JSON.stringify(errBody).slice(0, 200),
+      });
       return false;
     }
     return true;
   } catch (err) {
-    console.error('[Scruffs] Meta WhatsApp error:', err);
+    logger.error('send-otp', 'Meta WhatsApp error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return false;
   }
 }
@@ -126,25 +136,32 @@ export async function POST(request: NextRequest) {
     const { phone: rawPhone } = await request.json();
     if (!rawPhone) return NextResponse.json({ error: 'Phone required' }, { status: 400 });
 
-    const phone = normalizePhone(rawPhone);
+    const phone     = normalizePhone(rawPhone);
+    const phoneHash = hashField(phone);
 
-    // Rate limit: max 3 OTPs per phone per 10 min
+    // Rate limit: max 3 OTPs per phone per 10 min — use phoneHash for indexed lookup
     const recent = await prisma.otpCode.count({
-      where: { phone, createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) } },
+      where: { phoneHash, createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) } },
     });
     if (recent >= 3) {
+      logger.warn('send-otp', 'OTP rate limit hit', { phone, action: 'otp.rate_limited' });
       return NextResponse.json({ error: 'Too many attempts. Wait 10 minutes.' }, { status: 429 });
     }
 
-    // Ensure user exists
-    await prisma.user.upsert({ where: { phone }, update: {}, create: { phone } });
+    // Ensure user exists — store encrypted phone and hash
+    const encryptedPhone = encryptField(phone);
+    await prisma.user.upsert({
+      where:  { phone },
+      update: { phoneHash },
+      create: { phone: encryptedPhone, phoneHash },
+    });
 
     const code      = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     // Invalidate old codes and store new one (used as fallback when Twilio Verify isn't available)
     await prisma.otpCode.updateMany({ where: { phone, used: false }, data: { used: true } });
-    await prisma.otpCode.create({ data: { phone, code, expiresAt } });
+    await prisma.otpCode.create({ data: { phone, phoneHash, code, expiresAt } });
 
     // OTP_CHANNEL controls delivery:
     //   'sms'       – Twilio Verify SMS (default)
@@ -186,9 +203,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!sent) {
-      // Dev fallback — log code to console and return in response
-      console.log(`\n[Scruffs] OTP for ${phone}: ${code}\n`);
+      // Dev fallback — log code (masked in prod) and return in response
+      logger.info('send-otp', 'OTP dev fallback — no provider configured', { phone, channel: 'dev' });
       sentVia = 'dev';
+    } else {
+      logger.info('send-otp', 'OTP sent', { phone, channel: sentVia, action: 'otp.sent' });
     }
 
     return NextResponse.json({
@@ -198,7 +217,9 @@ export async function POST(request: NextRequest) {
       ...(sentVia === 'dev' ? { devOtp: code } : {}),
     });
   } catch (err) {
-    console.error('POST /api/auth/send-otp:', err);
+    logger.error('send-otp', 'POST /api/auth/send-otp error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

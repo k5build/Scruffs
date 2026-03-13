@@ -14,6 +14,7 @@ datasource db {
 model User {
   id        String    @id @default(cuid())
   phone     String?   @unique          // +971XXXXXXXXX – nullable for OAuth-only users
+  phoneHash String?   @unique          // HMAC-SHA256 of normalised phone for indexed lookups
   googleId  String?   @unique          // Google OAuth sub
   appleId   String?   @unique          // Apple OAuth sub
   name      String?
@@ -35,6 +36,7 @@ model User {
 model OtpCode {
   id        String   @id @default(cuid())
   phone     String
+  phoneHash String?              // HMAC-SHA256 of phone — used for rate-limit count queries
   code      String
   expiresAt DateTime
   used      Boolean  @default(false)
@@ -42,6 +44,7 @@ model OtpCode {
   createdAt DateTime @default(now())
 
   @@index([phone])
+  @@index([phoneHash])
 }
 
 // ── Saved pet profiles ────────────────────────────────────────
@@ -157,6 +160,22 @@ model LoyaltyTransaction {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// ── Audit log ─────────────────────────────────────────────────
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  actor     String?
+  targetId  String?
+  ip        String?
+  userAgent String?
+  details   String?  // JSON string
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([actor])
+  @@index([createdAt])
 }
 
 // ── Promotions / ads ──────────────────────────────────────────

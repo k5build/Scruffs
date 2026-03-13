@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { recalcTier } from '@/lib/utils';
 import { isAdminRequest } from '@/lib/adminAuth';
+import { audit } from '@/lib/audit';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
+
+const SERVICE = 'admin-loyalty';
 
 /** GET /api/admin/loyalty?q=searchterm — search users */
 export async function GET(request: NextRequest) {
@@ -30,7 +34,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!await isAdminRequest(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { userId, points, reason, note } = await request.json();
+  const ip        = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip')
+    ?? 'unknown';
+  const userAgent = request.headers.get('user-agent') ?? undefined;
+
+  const { userId, points, reason, note } = await request.json() as {
+    userId: string;
+    points: number;
+    reason: string;
+    note?:  string;
+  };
+
   if (!userId || typeof points !== 'number' || !reason) {
     return NextResponse.json({ error: 'userId, points, reason required' }, { status: 400 });
   }
@@ -45,6 +60,21 @@ export async function POST(request: NextRequest) {
 
   await prisma.loyaltyTransaction.create({
     data: { userId, points, reason, note: note ?? (points > 0 ? 'Admin award' : 'Admin deduction') },
+  });
+
+  // Audit log
+  await audit({
+    action:   'loyalty.points_awarded',
+    actor:    'admin',
+    targetId: userId,
+    ip,
+    userAgent,
+    details:  { points, reason, newTier },
+  });
+
+  logger.info(SERVICE, 'Loyalty points updated', {
+    userId,
+    action: 'loyalty.points_awarded',
   });
 
   return NextResponse.json({ success: true, newPoints: user.loyaltyPoints, newTier });
