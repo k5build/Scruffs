@@ -3,15 +3,15 @@
 import { useEffect, useRef } from 'react';
 
 interface Props {
-  lat: number;
-  lng: number;
+  lat:      number;
+  lng:      number;
   onMoved?: (lat: number, lng: number) => void;
 }
 
 export default function LeafletMap({ lat, lng, onMoved }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapRef = useRef<any>(null);
+  const mapRef       = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -32,6 +32,8 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
         zoom:               17,
         zoomControl:        false,
         attributionControl: false,
+        // Disable scroll zoom on mobile to avoid page scroll conflicts
+        scrollWheelZoom:    false,
       });
 
       mapRef.current = map;
@@ -47,17 +49,14 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
         });
       }
 
-      // Ensure map fills container on first render
-      const ro = new ResizeObserver(() => map.invalidateSize());
-      ro.observe(containerRef.current);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (map as any)._ro = ro;
+      // Ensure tiles fill the container after it has final dimensions
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+      });
     });
 
     return () => {
       if (mapRef.current) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (mapRef.current as any)._ro?.disconnect();
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -65,6 +64,7 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Re-centre when lat/lng change (GPS or saved location)
   useEffect(() => {
     if (!mapRef.current) return;
     mapRef.current.setView([lat, lng], 17, { animate: true });
@@ -74,7 +74,11 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
     <>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }} />
+      {/* Container must fill the parent — parent must have position:relative + explicit height */}
+      <div
+        ref={containerRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
     </>
   );
 }

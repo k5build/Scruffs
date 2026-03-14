@@ -20,7 +20,6 @@ const INITIAL: BookingData = {
 
 export default function BookingWizard() {
   const searchParams = useSearchParams();
-
   const [step, setStep] = useState(1);
   const [data, setData] = useState<BookingData>({ ...INITIAL });
 
@@ -45,6 +44,13 @@ export default function BookingWizard() {
 
   const STEP_LABELS = ['Pets', 'Time', 'Location', 'Confirm'];
 
+  // Location step: full-screen map, no wizard chrome
+  if (step === 3) {
+    return (
+      <LocationStep data={data} onChange={update} onNext={next} onBack={back} />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Sticky header */}
@@ -65,7 +71,6 @@ export default function BookingWizard() {
               <ArrowLeft size={17} strokeWidth={2.5} />
             </Link>
           )}
-          {/* Logo */}
           <Image src="/logo-icon-green.png" alt="Scruffs" width={36} height={36} className="rounded-xl flex-shrink-0" />
           <div className="flex-1">
             <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
@@ -83,7 +88,7 @@ export default function BookingWizard() {
         {/* Progress bar */}
         <div className="flex items-center gap-1.5 px-4 pb-3 max-w-lg mx-auto">
           {STEP_LABELS.map((label, i) => {
-            const id = i + 1;
+            const id     = i + 1;
             const done   = id < step;
             const active = id === step;
             return (
@@ -109,7 +114,6 @@ export default function BookingWizard() {
       <div className="flex-1 max-w-lg mx-auto w-full px-4 py-5">
         {step === 1 && <PetStep         data={data} onChange={update} onNext={next} />}
         {step === 2 && <ServiceSlotStep data={data} onChange={update} onNext={next} />}
-        {step === 3 && <LocationStep    data={data} onChange={update} onNext={next} onBack={back} />}
         {step === 4 && <ConfirmStep     data={data} onBack={back} />}
       </div>
     </div>
