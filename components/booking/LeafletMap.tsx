@@ -11,7 +11,7 @@ interface Props {
 export default function LeafletMap({ lat, lng, onMoved }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapRef       = useRef<any>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -32,8 +32,6 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
         zoom:               17,
         zoomControl:        false,
         attributionControl: false,
-        // Disable scroll zoom on mobile to avoid page scroll conflicts
-        scrollWheelZoom:    false,
       });
 
       mapRef.current = map;
@@ -49,7 +47,8 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
         });
       }
 
-      // Ensure tiles fill the container after it has final dimensions
+      // Force Leaflet to recalculate container dimensions after the browser paints.
+      // Without this the tiles only cover ~60% of the width on first render.
       requestAnimationFrame(() => {
         map.invalidateSize();
       });
@@ -64,7 +63,6 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-centre when lat/lng change (GPS or saved location)
   useEffect(() => {
     if (!mapRef.current) return;
     mapRef.current.setView([lat, lng], 17, { animate: true });
@@ -74,11 +72,7 @@ export default function LeafletMap({ lat, lng, onMoved }: Props) {
     <>
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      {/* Container must fill the parent — parent must have position:relative + explicit height */}
-      <div
-        ref={containerRef}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-      />
+      <div ref={containerRef} className="w-full h-full" />
     </>
   );
 }
